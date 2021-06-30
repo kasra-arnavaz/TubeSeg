@@ -6,3 +6,5 @@
 /unittest_data
 *.csv
 *.mat
+*.out
+*.sh

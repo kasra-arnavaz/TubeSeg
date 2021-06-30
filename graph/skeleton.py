@@ -25,7 +25,7 @@ class Skeleton:
             self.remove_graph()
 
     def skeleton_deos_not_exist(self):
-        return f'{self.name}.skel' not in os.listdir(self.path)
+        return f'skel_{self.name}.graph' not in os.listdir(self.path)
         
     def load_tif(self, crop=3):
         return tif.imread(f'{self.path}/{self.name}.tif')[:,crop:-crop, crop:-crop]
@@ -53,19 +53,19 @@ class Skeleton:
         gel.graph_edge_contract(g, 3)
         s = gel.graph_LS_skeleton(g)
         gel.graph_prune(s)
-        gel.graph_save(f'{self.path}/{self.name}.skel', s)
+        gel.graph_save(f'{self.path}/skel_{self.name}.graph', s)
     
     def scale_skeleton(self):
-        with open(f'{self.path}/{self.name}.skel') as f:
+        with open(f'{self.path}/skel_{self.name}.graph') as f:
             lines = f.read().splitlines()
-        with open(f'{self.path}/{self.name}.skel', 'w') as f:
+        with open(f'{self.path}/skel_{self.name}.graph', 'w') as f:
             for line in lines:
                 if line.startswith('n') and 'nan' not in line:
                     print(line.split(' ')[0], float(line.split(' ')[1])*(2.89),float(line.split(' ')[2]), float(line.split(' ')[3]), file=f)
                 else: print(line, file=f)
     
     def write_obj(self):
-        s = gel.graph_load(f'{self.path}/{self.name}.skel')
+        s = gel.graph_load(f'{self.path}/skel_{self.name}.graph')
         m = gel.graph_to_mesh_cyl(s, fudge=0.5)
         gel.obj_save(f'{self.path}/{self.name}.obj', m)
 
@@ -73,7 +73,7 @@ class Skeleton:
         os.remove(f'{self.path}/{self.name}.graph')
 
 if __name__ == '__main__':
-    name = 'LI_2019-11-08_embX_pos1'
+    name = 'LI_2019-08-30_emb2_pos1'
     path = f'movie/val/{name}/pred'
     tifs = [tif.replace('.tif', '') for tif in os.listdir(path) if tif.endswith('.tif')]
     for t in tifs:

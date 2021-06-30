@@ -73,4 +73,8 @@ class Skeleton:
         os.remove(f'{self.path}/{self.name}.graph')
 
 if __name__ == '__main__':
-    Skeleton('alaki', 'seg_LI_2019-02-05_emb5_pos3_tp209_A4')
+    name = 'LI_2019-11-08_embX_pos1'
+    path = f'movie/val/{name}/pred'
+    tifs = [tif.replace('.tif', '') for tif in os.listdir(path) if tif.endswith('.tif')]
+    for t in tifs:
+        Skeleton(path, t)

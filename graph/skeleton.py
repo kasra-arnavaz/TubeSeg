@@ -53,12 +53,12 @@ class Skeleton:
         gel.graph_edge_contract(g, 3)
         s = gel.graph_LS_skeleton(g)
         gel.graph_prune(s)
-        gel.graph_save(f'{self.path}/skel_{self.name}.graph', s)
+        gel.graph_save(f'{self.path}/{self.name}.skel', s)
     
     def scale_skeleton(self):
-        with open(f'{self.path}/skel_{self.name}.graph') as f:
+        with open(f'{self.path}/{self.name}.skel') as f:
             lines = f.read().splitlines()
-        with open(f'{self.path}/skel_{self.name}.graph', 'w') as f:
+        with open(f'{self.path}/{self.name}.skel', 'w') as f:
             for line in lines:
                 if line.startswith('n') and 'nan' not in line:
                     print(line.split(' ')[0], float(line.split(' ')[1])*(2.89),float(line.split(' ')[2]), float(line.split(' ')[3]), file=f)

@@ -176,7 +176,7 @@ def crop_320(write_dir, image_dir, image_name, patch_id):
     os.makedirs(write_dir, exist_ok=True)
     tif.imwrite(f"{write_dir}/{image_name.replace('.tif', '')}{patch_id}.tif", x_que)
 
-write_patches_from_images('E:/dataset/val/patches/duct/320', 'E:/dataset/val/images/duct', 'E:/dataset/val/patches/duct')
+# write_patches_from_images('E:/dataset/val/patches/duct/320', 'E:/dataset/val/images/duct', 'E:/dataset/val/patches/duct')
 
 # def make_patches(target_path, pred_path, prefix, split, epoch, thr):
 

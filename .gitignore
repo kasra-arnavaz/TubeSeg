@@ -3,7 +3,6 @@
 *.pdf
 *.tif
 /movie
-/results
 /unittest_data
 *.csv
 *.mat

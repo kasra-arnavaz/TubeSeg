@@ -185,12 +185,11 @@ class SemiSupervised:
                     TifWriter(f'{write_path}/rec', name_parser, rec).write()
 
 def main():
+    import glob
     semi = SemiSupervised(name='semi', resume_epoch=40, final_epoch=40, loss_weights=[1, 10], transformer=ModifiedStandardization)
-    # semi.train_model('data/train/images/duct', 'data/train/images/label','data/dev/images/duct')
-    # semi.test_model('E:/dataset/train/images/duct')
-    # semi.test_model('E:/dataset/dev/images/duct')
-    # semi.test_model('E:/dataset/val/images/duct')
-    # semi.test_model('E:/dataset/test/images/duct')
-    semi.test_model(f'C:/users/arnav/desktop/asdf', write_path = f'C:/users/arnav/desktop/asdf')
+    for path in glob.glob('movie/val/*'):
+        os.remove(f'{path}/prob')
+        os.remove(f'{path}/pred')
+        semi.test_model(f'{path}/mcherry', write_path = path)
 
 main()

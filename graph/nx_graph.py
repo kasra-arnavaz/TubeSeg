@@ -163,6 +163,9 @@ class Cycle(Topology):
 
 
 if __name__ == '__main__':
-    for i in range(1):
-        Cycle('alaki2', f'one-ten_40_val_pred0.7_LI_2018-11-20_emb7_pos4_tp{i+1}').write_pickle()
-    
+    movie_name = 'LI_2020-06-04_emb1_pos2'
+    path = f'movie/val/{movie_name}/pred'
+    names = [name.replace('.tif', '') for name in os.listdir(path) if name.endswith('.tif')]
+    for name in names:
+        Cycle(path, name).write_pickle(f'{path}/../cyc')
+        Component(path, name).write_pickle(f'{path}/../cmp')

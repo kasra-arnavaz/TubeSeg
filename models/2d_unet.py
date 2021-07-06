@@ -4,6 +4,7 @@ from tensorflow.keras.optimizers import Adam, SGD
 from utils.data_utils import *
 from utils.patch_utils import *
 from utils.transform_data import *
+from cldice_loss.cldice import soft_dice_cldice_loss
 
 class UNet:
 
@@ -98,7 +99,7 @@ class UNet:
 
     def train_model(self, x_path, y_path):
         my_model = self.model_architecture()
-        my_model.compile(optimizer=Adam(learning_rate=1e-4), loss='binary_crossentropy', metrics = ['binary_accuracy'])
+        my_model.compile(optimizer=Adam(learning_rate=1e-4), loss=soft_dice_cldice_loss, metrics = ['binary_accuracy'])
         x_tr, y_tr, names_tr, z_list = self.extract_training_images(x_path, y_path)
         num_samples = x_tr.shape[0] * self.patches_per_img
         steps_tr = np.ceil(num_samples / self.batch_size)
@@ -137,8 +138,8 @@ class UNet:
                 TifWriter(f'{write_path}/{name_parser.split}', name_parser, prob).write()
 
 def main():
-    unet = UNet(name='unet', resume_epoch=200, final_epoch=200, transformer=ModifiedStandardization)
-    # unet.train_model('data/train/images/ducts', 'data/train/images/labels')
+    unet = UNet(name='unetcldice', resume_epoch=200, final_epoch=200, transformer=ModifiedStandardization)
+    unet.train_model('data/train/images/ducts', 'data/train/images/labels')
     unet.test_model('E:/dataset/train/images/duct')
     unet.test_model('E:/dataset/dev/images/duct')
     unet.test_model('E:/dataset/val/images/duct')

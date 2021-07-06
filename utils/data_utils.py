@@ -1,27 +1,6 @@
 import os
 import numpy as np
 import tifffile as tif
-
-# class Name:
-
-#     def __init__(self, path):
-#         self.path = path
-    
-#     def separate_on_extension(self, name):
-#         name_without_ext, ext = os.path.splitext(name)
-#         return name_without_ext, ext
-    
-#     def is_tif(self, name):
-#         return self.separate_on_extension(name)[1] == '.tif'
-    
-#     def exclude_category_and_extension(self, name):
-#         split_name = name.split('_')
-#         return '_'.join(split_name[1:])
-
-#     @property
-#     def get_names(self):
-#         '''tif names without category and extension'''
-#         return [self.exclude_category_and_extension(name) for name in os.listdir(self.path) if self.is_tif(name)]
             
 class NameParser:
     '''

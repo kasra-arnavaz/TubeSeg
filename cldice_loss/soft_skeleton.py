@@ -13,10 +13,16 @@ def soft_erode(img):
     Returns:
         [float32]: [the eroded image]
     """
-    p1 = -KL.MaxPool3D(pool_size=(3, 3, 1), strides=(1, 1, 1), padding='same', data_format=None)(-img)
-    p2 = -KL.MaxPool3D(pool_size=(3, 1, 3), strides=(1, 1, 1), padding='same', data_format=None)(-img)
-    p3 = -KL.MaxPool3D(pool_size=(1, 3, 3), strides=(1, 1, 1), padding='same', data_format=None)(-img)
-    return tf.math.minimum(tf.math.minimum(p1, p2), p3)
+    if len(img.shape) == 5:
+        p1 = -KL.MaxPool3D(pool_size=(3, 3, 1), strides=(1, 1, 1), padding='same', data_format=None)(-img)
+        p2 = -KL.MaxPool3D(pool_size=(3, 1, 3), strides=(1, 1, 1), padding='same', data_format=None)(-img)
+        p3 = -KL.MaxPool3D(pool_size=(1, 3, 3), strides=(1, 1, 1), padding='same', data_format=None)(-img)
+        return tf.math.minimum(tf.math.minimum(p1, p2), p3)
+
+    elif len(img.shape) == 4:
+        p1 = -KL.MaxPool2D(pool_size=(3, 1), strides=(1, 1), padding='same', data_format=None)(-img)
+        p2 = -KL.MaxPool2D(pool_size=(1, 3), strides=(1, 1), padding='same', data_format=None)(-img)
+        return tf.math.minimum(p1, p2)
 
 
 def soft_dilate(img):
@@ -28,7 +34,11 @@ def soft_dilate(img):
     Returns:
         [float32]: [the dialated image]
     """
-    return KL.MaxPool3D(pool_size=(3, 3, 3), strides=(1, 1, 1), padding='same', data_format=None)(img)
+    if len(img.shape) == 5:
+        return KL.MaxPool3D(pool_size=(3, 3, 3), strides=(1, 1, 1), padding='same', data_format=None)(img)
+
+    elif len(img.shape) == 4:
+        return KL.MaxPool2D(pool_size=(3, 3), strides=(1, 1), padding='same', data_format=None)(img)
 
 
 def soft_open(img):

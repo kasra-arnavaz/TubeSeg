@@ -139,7 +139,7 @@ class UNet:
 
 def main():
     unet = UNet(name='unetcldice', resume_epoch=200, final_epoch=200, transformer=ModifiedStandardization)
-    unet.train_model('data/train/images/ducts', 'data/train/images/labels')
+    unet.train_model('data/train/images/duct', 'data/train/images/label')
     unet.test_model('E:/dataset/train/images/duct')
     unet.test_model('E:/dataset/dev/images/duct')
     unet.test_model('E:/dataset/val/images/duct')

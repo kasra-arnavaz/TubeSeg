@@ -13,10 +13,16 @@ class TrackpyFiltering:
     def __init__(self, data, track):
         self.data = data
         self.track = track
-    
+        self.sub_folder = f'srch={self.track.search_range}, mem={self.track.memory}, thr={self.track.thr}, step={self.track.step}, stop={self.track.stop}'
+        os.makedirs(f'{self.data.path}/{self.sub_folder}', exist_ok=True)
+
     @cached_property
     def filtered_tracks(self):
         return self.track.filter_tracks()
+
+
+    def write_centers_as_csv(self):
+        self.filtered_tracks.to_csv(f'{self.data.path}/{self.sub_folder}/center_{self.data.name}.csv', index=False)
 
     @property
     def time_filter(self):
@@ -41,9 +47,9 @@ class TrackpyFiltering:
         for tp in range(self.data.tp_max):
             self.write_pickle(tp)
         
-    def write_pickle(self):
-        for tp in range(self.data.tp_max):
-            with open(f'{self.data.path}/{self.data.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
+    def write_pickle(self, tp):
+        if f'{self.data.name}_tp{tp+1}.{self.topo_type}' not in os.listdir(f'{self.data.path}/{self.sub_folder}'):
+            with open(f'{self.data.path}/{self.sub_folder}/{self.data.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
                 pickle.dump(self.set_all_properties(tp), f)
     
     def set_all_properties(self, tp):
@@ -63,16 +69,17 @@ class TrackpyFiltering:
 
     @property
     def topo_type(self):
-        return f'cyctpy{self.track.thr}'
+        return f'cyctpy'
 
 
 if __name__ == '__main__':
-    path = 'movie/test'
+    path = 'movie/val'
     import os
     for name in os.listdir(path):
-        name = 'LI_2018-11-20_emb7_pos4'
-        tp_max = len(os.listdir(f'{path}/{name}/skel'))
-        data = Prediction(f'{path}/{name}/cyc', f'pred0.7_{name}', tp_max)
-        track = Tracking(data, search_range=10, memory=1, thr=5, step=0.9, stop=3)
-        TrackpyFiltering(data, track).write_pickle()
+        name = 'LI_2018-12-07_emb6_pos4'
+        tp_max = len(os.listdir(f'{path}/{name}/pred'))
+        data = Prediction(f'{path}/{name}/cyc', f"pred-0.7-semi-40_{name.replace('LI_', '')}", tp_max)
+        track = Tracking(data, search_range=10, memory=0, thr=20, step=0.9, stop=3)
+        # TrackpyFiltering(data, track).save_filtered()
+        TrackpyFiltering(data, track).write_centers_as_csv()
         break

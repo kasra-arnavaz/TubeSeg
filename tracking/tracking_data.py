@@ -17,8 +17,10 @@ class TrackingData(ABC):
         data = self.get_data()
         plt.figure()
         plt.title('Data')
-        plt.scatter(data.x, data.y, c=data.loop_id, s=5, cmap='jet')
+        plt.scatter(data.x, data.y, c=data.iloc[:,-1], s=5, cmap='jet')
         plt.gca().invert_yaxis()
+        plt.xlim((0,1024))
+        plt.ylim(0,1024)
         plt.show()
 
 
@@ -68,6 +70,7 @@ class Prediction(TrackingData):
 
 
 if __name__ == '__main__':
-    pred = Prediction('alaki2', 'one-ten_40_val_pred0.7_LI_2018-11-20_emb7_pos4', 5)
-    print(pred.get_data())
-    
+    # pred = Silja('.', 'center_pred-0.7-semi-40_2018-12-07_emb6_pos4')
+    pred = Silja('.', 'LI 2018-12-07_emb6_pos4_val')
+
+    pred.plot_data()    

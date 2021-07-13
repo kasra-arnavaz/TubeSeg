@@ -162,7 +162,7 @@ class SemiSupervised:
                                                 j*self.output_size:j*self.output_size+self.input_size,:]
 
 
-    def test_model(self, path, epoch_list=None, write_path=None, make_rec=True):
+    def test_model(self, path, epoch_list=None, write_path=None, make_rec=False):
 
         if epoch_list is None: epoch_list = [self.final_epoch]
         if write_path is None: write_path = f'results/{self.name}/2d/images'
@@ -187,9 +187,7 @@ class SemiSupervised:
 def main():
     import glob
     semi = SemiSupervised(name='semi', resume_epoch=40, final_epoch=40, loss_weights=[1, 10], transformer=ModifiedStandardization)
-    for path in glob.glob('movie/val/*'):
-        os.remove(f'{path}/prob')
-        os.remove(f'{path}/pred')
+    for path in glob.glob('movie/dev//silja/*'):
         semi.test_model(f'{path}/mcherry', write_path = path)
 
 main()

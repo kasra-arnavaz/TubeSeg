@@ -111,13 +111,10 @@ class PlotCmpCycOnMIP(PlotSkelOnMIP):
 
     
 if __name__ == '__main__':
-    path = 'movie/test'
+    path = 'movie/val'
     for name in os.listdir(path):
-        name  = 'LI_2018-11-20_emb7_pos4'
-        for i in range(len(os.listdir(f'{path}/{name}/skel'))):
-            PlotCmpCycOnMIP(f'{path}/{name}/skel', f'pred0.7_{name}_tp{i+1}',
+        for i in range(len(os.listdir(f'{path}/{name}/pred'))):
+            PlotColoredCycleOnMIP(f'{path}/{name}/pred', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{i+1}",
                     f'{path}/{name}/mip', f"duct-mip_{name.replace('LI_', '')}_tp{i+1}",
-                    f'{path}/{name}/cyc', f'pred0.7_{name}_tp{i+1}', 'cyc',
-                    f'{path}/{name}/cmp', f'pred0.7_{name}_tp{i+1}', 'cmp')\
-                        .save_figure(f'{path}/{name}/redgreen_mip_nofilter')
-        break
+                    f'{path}/{name}/cyc/srch=10, mem=1, thr=5, step=0.9, stop=3', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{i+1}", 'cyctpy')\
+                    .save_figure(f'{path}/{name}/cyc/srch=10, mem=1, thr=5, step=0.9, stop=3/cyc_mip')

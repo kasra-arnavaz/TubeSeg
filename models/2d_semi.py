@@ -187,9 +187,6 @@ class SemiSupervised:
 def main():
     import glob
     semi = SemiSupervised(name='semi', resume_epoch=40, final_epoch=40, loss_weights=[1, 10], transformer=ModifiedStandardization)
-    for path in glob.glob('movie/val/*'):
-        os.remove(f'{path}/prob')
-        os.remove(f'{path}/pred')
-        semi.test_model(f'{path}/mcherry', write_path = path)
+    semi.test_model(f'asdf', write_path = 'asdf')
 
 main()

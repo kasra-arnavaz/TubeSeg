@@ -73,7 +73,5 @@ class MassDataConversion:
 
 
 if __name__ == '__main__':
-    import glob
-    for file in glob.glob('C:/users/arnav/desktop/asdf/prob'):
-        MassDataConversion(file, file.replace('prob', 'pred'), Prob2Pred, 0.7).read_convert_write()
+    MassDataConversion('asdf/prob', 'asdf/pred', Prob2Pred, 0.7).read_convert_write()
     

@@ -8,3 +8,10 @@
 *.mat
 *.out
 *.sh
+*.html
+*.graph
+*.coverage
+nx.py
+*.js
+*.json
+*.pyc

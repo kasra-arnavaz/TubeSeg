@@ -120,8 +120,9 @@ class Topology(ABC):
     def write_pickle(self, write_path=None):
         if write_path is None: write_path = self.path
         else: os.makedirs(write_path, exist_ok=True)
-        with open(f'{write_path}/{self.name}.{self.topo_type}', 'wb') as f:
-            pickle.dump(self.set_all_properties(), f)
+        if f'{self.name}.{self.topo_type}' not in os.listdir(write_path):
+            with open(f'{write_path}/{self.name}.{self.topo_type}', 'wb') as f:
+                pickle.dump(self.set_all_properties(), f)
 
 
 
@@ -163,8 +164,8 @@ class Cycle(Topology):
 
 
 if __name__ == '__main__':
-    movie_name = 'LI_2020-06-04_emb1_pos2'
-    path = f'movie/val/{movie_name}/pred'
+    name = 'LI_2019-11-21_emb6_pos3'
+    path = f'movie/dev/silja/{name}/pred'
     names = [name.replace('.tif', '') for name in os.listdir(path) if name.endswith('.tif')]
     for name in names:
         Cycle(path, name).write_pickle(f'{path}/../cyc')

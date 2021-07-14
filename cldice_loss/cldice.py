@@ -24,8 +24,8 @@ def soft_clDice_loss(iter_ = 50):
         smooth = 1.
         skel_pred = soft_skel(y_pred, iter_)
         skel_true = soft_skel(y_true, iter_)
-        pres = (K.sum(tf.math.multiply(skel_pred, y_true)[:,1:,:,:,:])+smooth)/(K.sum(skel_pred[:,1:,:,:,:])+smooth)    
-        rec = (K.sum(tf.math.multiply(skel_true, y_pred)[:,1:,:,:,:])+smooth)/(K.sum(skel_true[:,1:,:,:,:])+smooth)    
+        pres = (K.sum(tf.math.multiply(skel_pred, y_true))+smooth)/(K.sum(skel_pred)+smooth)    
+        rec = (K.sum(tf.math.multiply(skel_true, y_pred))+smooth)/(K.sum(skel_true)+smooth)    
         cl_dice = 1.- 2.0*(pres*rec)/(pres+rec)
         return cl_dice
     return loss
@@ -42,8 +42,8 @@ def soft_dice(y_true, y_pred):
         [float32]: [loss value]
     """
     smooth = 1
-    intersection = K.sum((y_true * y_pred)[:,1:,:,:,:])
-    coeff = (2. *  intersection + smooth) / (K.sum(y_true[:,1:,:,:,:]) + K.sum(y_pred[:,1:,:,:,:]) + smooth)
+    intersection = K.sum((y_true * y_pred))
+    coeff = (2. *  intersection + smooth) / (K.sum(y_true) + K.sum(y_pred) + smooth)
     return (1. - coeff)
 
 
@@ -67,8 +67,8 @@ def soft_dice_cldice_loss(iters = 15, alpha=0.5):
         smooth = 1.
         skel_pred = soft_skel(y_pred, iters)
         skel_true = soft_skel(y_true, iters)
-        pres = (K.sum(tf.math.multiply(skel_pred, y_true)[:,1:,:,:,:])+smooth)/(K.sum(skel_pred[:,1:,:,:,:])+smooth)    
-        rec = (K.sum(tf.math.multiply(skel_true, y_pred)[:,1:,:,:,:])+smooth)/(K.sum(skel_true[:,1:,:,:,:])+smooth)    
+        pres = (K.sum(tf.math.multiply(skel_pred, y_true))+smooth)/(K.sum(skel_pred)+smooth)    
+        rec = (K.sum(tf.math.multiply(skel_true, y_pred))+smooth)/(K.sum(skel_true)+smooth)    
         cl_dice = 1.- 2.0*(pres*rec)/(pres+rec)
         cl_dice = soft_dice(skel_true, skel_pred)
         dice = soft_dice(y_true, y_pred)

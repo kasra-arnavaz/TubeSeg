@@ -44,7 +44,7 @@ class Prediction(TrackingData):
     def all_cycles(self):
         x = []
         for tp in range(self.tp_max):
-            y = read_pickle(self.path, f'{self.name}_tp{tp+1}', 'cyc')
+            y = read_pickle(f'{self.path}/{self.name}_tp{tp+1}.cyc')
             x.append(y)
         return x
 

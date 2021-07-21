@@ -157,25 +157,46 @@ def crop_320(write_dir, image_dir, image_name, patch_id):
 
 # write_patches_from_images('E:/dataset/val/patches/duct/320', 'E:/dataset/val/images/duct', 'E:/dataset/val/patches/duct')
 
-# def make_patches(target_path, pred_path, prefix, split, epoch, thr):
+def make_patches(saving_path, target_path, pred_path, prefix, epoch, thr):
 
-#     names_target = [f.replace('seg_','') for f in os.listdir(target_path) if f.endswith('tif') ]
+    names_target = [f.replace('label_','').replace('.tif' ,'') for f in os.listdir(target_path) if f.endswith('tif') ]
 
-#     for name in names_target:
-#         patch_id = name.split('_')[-1][:2]
-#         raw_name = name.replace('_'+patch_id, '')
-#         t = tif.imread(f'{target_path}/seg_{name}').reshape(-1)
-#     #    y = tif.imread(f'{pred_path}/{prefix}_{epoch}_{split}_pred{np.round(thr, 2)}_{raw_name}')
-#         y = tif.imread(f'{pred_path}/{prefix}_{epoch}_{split}_lin_{raw_name}')
-#         y = y.reshape(-1,4,256,4,256).transpose(0,1,3,2,4)
-#         y = y.reshape(-1,16,256,256).transpose(1,0,2,3,)
-#         patch_index = get_patch_index(patch_id)
-#         y = y[patch_index]
-#     #    saving_path  = pred_path.replace('preds', 'preds_patches')
-#         saving_path  = pred_path.replace('lins', 'lins_patches')
-#         os.makedirs(saving_path, exist_ok=True)
-#         tif.imwrite(f'{saving_path}/{prefix}_{epoch}_{split}_lin_{name}', y, 'minisblack')
-#     #    tif.imwrite(f'{saving_path}/{prefix}_{epoch}_{split}_pred{np.round(thr, 2)}_{name}', y, 'minisblack')
+    for name in names_target:
+        patch_id = name[-2:]
+        raw_name = name.replace(patch_id, '')
+        y = tif.imread(f'{pred_path}/pred-{thr}-{prefix}-{epoch}_{raw_name}.tif')
+        y = y.reshape(-1,4,256,4,256).transpose(0,1,3,2,4)
+        y = y.reshape(-1,16,256,256).transpose(1,0,2,3,)
+        patch_index = get_patch_index(patch_id)
+        y = y[patch_index]
+        os.makedirs(saving_path, exist_ok=True)
+        tif.imwrite(f'{saving_path}/pred-{thr}-{prefix}-{epoch}_{raw_name}{patch_id}.tif', y)
+
+def make_patches_320(saving_path, patch_path, image_path):
+
+    names_patch = [f.replace('label_','').replace('.tif' ,'') for f in os.listdir(patch_path) if f.endswith('tif') ]
+    in_size, out_size = 320, 256
+    dh_size = int((in_size - out_size)/2)
+    for name in names_patch:
+        patch_id = name[-2:]
+        raw_name = name.replace(patch_id, '')
+        patch_index = get_patch_index(patch_id)
+        r, c = np.unravel_index(patch_index,(4,4))
+        x_test = tif.imread(f'{image_path}/{raw_name}.tif')
+        x_test_pad = np.pad(x_test, ((0,0),(dh_size,dh_size),(dh_size,dh_size)), 'constant', constant_values=0)
+        r *= out_size
+        c *= out_size
+        x_que = x_test_pad[:,r:r+in_size,c:c+in_size]
+        os.makedirs(saving_path, exist_ok=True)
+        tif.imwrite(f'{saving_path}/{name}.tif', x_que)
+
+def get_patch_index(patch_id):
+    grid = np.array(['A4','B4','C4','D4',
+                        'A3','B3','C3','D3',
+                        'A2','B2','C2','D2',
+                        'A1','B1','C1','D1'])
+    return int(np.argwhere(grid==patch_id))
+
 
 if __name__ == '__main__':
-    print(Name('alaki').get_names)
+    make_patches_320('D:/dataset/test/patches/duct/320', 'D:/dataset/test/patches/duct', 'D:/dataset/test/images/duct')

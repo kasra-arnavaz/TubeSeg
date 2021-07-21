@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 import networkx as nx
 from cached_property import cached_property
+import os
 
 from tracking.trackpy import Tracking
 from tracking.tracking_data import Prediction
@@ -73,13 +74,10 @@ class TrackpyFiltering:
 
 
 if __name__ == '__main__':
-    path = 'movie/val'
-    import os
+    path = 'movie/dev'
     for name in os.listdir(path):
-        name = 'LI_2018-12-07_emb6_pos4'
         tp_max = len(os.listdir(f'{path}/{name}/pred'))
         data = Prediction(f'{path}/{name}/cyc', f"pred-0.7-semi-40_{name.replace('LI_', '')}", tp_max)
-        track = Tracking(data, search_range=10, memory=0, thr=20, step=0.9, stop=3)
-        # TrackpyFiltering(data, track).save_filtered()
+        track = Tracking(data, search_range=10, memory=3, thr=5, step=0.9, stop=3)
+        TrackpyFiltering(data, track).save_filtered()
         TrackpyFiltering(data, track).write_centers_as_csv()
-        break

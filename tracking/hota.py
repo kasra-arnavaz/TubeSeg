@@ -119,7 +119,7 @@ class HOTA:
 
 
 if __name__ == '__main__':
-    HOTA('.', 'LI 2018-12-07_emb6_pos4_val', 'movie/val/LI_2018-12-07_emb6_pos4/cyc/srch=10, mem=0, thr=20, step=0.9, stop=3',\
-         'center_pred-0.7-semi-40_2018-12-07_emb6_pos4', 10).print()
+    HOTA('.', 'LI 2018-12-07_emb6_pos4_val', 'movie/val/LI_2018-12-07_emb6_pos4/cyc/srch=10, mem=3, thr=20, step=0.9, stop=3',\
+         'center_pred-0.7-semi-40_2018-12-07_emb6_pos4',50).print()
     # HOTA('tracking/hota_sanity', 'gt_sanity', 'tracking/hota_sanity', 'pr_sanity_c', 1).print()
 

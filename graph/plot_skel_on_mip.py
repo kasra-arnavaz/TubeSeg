@@ -5,6 +5,7 @@ import numpy as np
 import tifffile as tif
 from matplotlib import cm
 from abc import ABC, abstractmethod
+import pandas as pd
 
 from graph.nx_graph import NxGraph, Cycle, Component
 from utils.unpickle import read_pickle
@@ -13,17 +14,15 @@ from time_filtering.trackpy_filtering import TrackpyFiltering
 
 class PlotSkelOnMIP(ABC):
 
-    def __init__(self, graph_path, graph_name, mip_path, mip_name):
-        self.graph_path = graph_path
+    def __init__(self, graph_path, graph_name, mip_file):
+        self.mip = tif.imread(mip_file)
         self.graph_name = graph_name
-        self.mip_path = mip_path
-        self.mip_name = mip_name
         self.graph = NxGraph(graph_path, graph_name)
 
     def get_mip_figure(self):
-        mip = tif.imread(f'{self.mip_path}/{self.mip_name}.tif')
-        # return plt.imshow(np.flipud(mip), cmap='gray')
-        return plt.imshow(np.flipud(np.rot90(mip,1)), cmap='gray')
+        return plt.imshow(self.mip, cmap='gray')
+        # return plt.imshow(np.flipud(self.mip), cmap='gray')
+        # return plt.imshow(np.flipud(np.rot90(self.mip,1)), cmap='gray')
 
     @abstractmethod
     def get_skel_figure(self):
@@ -47,18 +46,19 @@ class PlotSkelOnMIP(ABC):
         plt.show()
     
     def save_figure(self, path):
-        self.get_figure()
-        os.makedirs(f'{path}/png', exist_ok=True)
-        os.makedirs(f'{path}/pdf', exist_ok=True)
-        plt.savefig(f'{path}/png/{self.graph_name}.png')
-        plt.savefig(f'{path}/pdf/{self.graph_name}.pdf')
-        plt.close()
+        if f'{self.graph_name}.png' not in f'{path}/png':
+            self.get_figure()
+            os.makedirs(f'{path}/png', exist_ok=True)
+            os.makedirs(f'{path}/pdf', exist_ok=True)
+            plt.savefig(f'{path}/png/{self.graph_name}.png')
+            plt.savefig(f'{path}/pdf/{self.graph_name}.pdf')
+            plt.close()
 
 class PlotComponentOnMIP(PlotSkelOnMIP):
 
-    def __init__(self, graph_path, graph_name, mip_path, mip_name, cmp_path, cmp_name, cmp_extension):
-        super().__init__(graph_path, graph_name, mip_path, mip_name)
-        self.cmp = read_pickle(cmp_path, cmp_name, cmp_extension)
+    def __init__(self, graph_path, graph_name, mip_file, cmp_file):
+        super().__init__(graph_path, graph_name, mip_file)
+        self.cmp = read_pickle(cmp_file)
 
     def get_skel_figure(self):
         fig = nx.draw_networkx_edges(self.graph.define_graph(), pos=self.graph.nodes_xy_position(), 
@@ -70,10 +70,9 @@ class PlotComponentOnMIP(PlotSkelOnMIP):
 
 class PlotCycleOnMIP(PlotSkelOnMIP):
     
-    def __init__(self, graph_path, graph_name, mip_path, mip_name, cyc_path, cyc_name, cyc_extension):
-        super().__init__(graph_path, graph_name, mip_path, mip_name)
-        self.cyc = read_pickle(cyc_path, cyc_name, cyc_extension)
-
+    def __init__(self, graph_path, graph_name, mip_file, cyc_file):
+        super().__init__(graph_path, graph_name, mip_file)
+        self.cyc = read_pickle(cyc_file)
 
     def get_figure_title(self):
         return plt.title(f'{self.graph_name}_#cyc{len(self.cyc.center)}')
@@ -83,7 +82,7 @@ class PlotCycleOnMIP(PlotSkelOnMIP):
                 edge_color='r', width=2, edgelist=self.cyc.edge_list)
         return fig
 
-class PlotColoredCycleOnMIP(PlotCycleOnMIP):
+class PlotColoredCycOnMIP(PlotCycleOnMIP):
 
     def get_skel_figure(self):
         colors = cm.Paired.colors
@@ -94,10 +93,10 @@ class PlotColoredCycleOnMIP(PlotCycleOnMIP):
 
 class PlotCmpCycOnMIP(PlotSkelOnMIP):
     
-    def __init__(self, graph_path, graph_name, mip_path, mip_name, cyc_path, cyc_name, cyc_extension, cmp_path, cmp_name, cmp_extension):
-        super().__init__(graph_path, graph_name, mip_path, mip_name)
-        self.cyc = read_pickle(cyc_path, cyc_name, cyc_extension)
-        self.cmp = read_pickle(cmp_path, cmp_name, cmp_extension)
+    def __init__(self, graph_path, graph_name, mip_file, cyc_file, cmp_file):
+        super().__init__(graph_path, graph_name, mip_file)
+        self.cyc = read_pickle(cyc_file)
+        self.cmp = read_pickle(cmp_file)
 
     def get_figure_title(self):
         return plt.title(f'{self.graph_name}_#cyc{len(self.cyc.center)}_#cmp{len(self.cmp.center)}')
@@ -109,12 +108,50 @@ class PlotCmpCycOnMIP(PlotSkelOnMIP):
                 edge_color='g', width=3, edgelist=self.cyc.edge_list)
         return plt.gcf()
 
+class CompareToSilja(PlotColoredCycOnMIP):
+
+    def __init__(self, graph_path, graph_name, mip_file, cyc_file, silja_file, tp):
+        super().__init__(graph_path, graph_name, mip_file, cyc_file)
+        silja = pd.read_csv(silja_file)
+        self.silja = silja.loc[silja.frame == tp, ['x', 'y', 'loop_id']]
+
+    def silja_process(self):
+        S, pos, loop_id = nx.Graph(), {}, []
+        for index, row in self.silja.iterrows():
+            S.add_node(index)
+            *coor, id = row.to_list()
+            pos[index] = coor
+            loop_id.append(id)
+        return S, pos, np.array(loop_id)
+
+    def get_skel_figure(self):
+        colors = np.delete(np.array(list(cm.tab10.colors)), -3, 0)
+        silja_graph, silja_pos, silja_id = self.silja_process()
+        pos = {}
+        for k, (y,x) in self.graph.nodes_xy_position().items():
+            pos[k] = [x, y]
+        for edges, loop_id in zip(self.cyc.topology_edges, self.cyc.loop_id):
+            nx.draw_networkx_edges(self.graph.define_graph(), pos=pos, 
+                edge_color=colors[loop_id%len(colors)], width=3, edgelist=edges)
+        silja_colors = colors[np.remainder(silja_id,len(colors)).astype(int)]
+        nx.draw_networkx_nodes(silja_graph, pos=silja_pos, node_color=silja_colors, node_shape='x', linewidths=3)
+        return plt.gcf()
+
+    def get_figure_title(self):
+        return plt.title(f'{self.graph_name}_#truecyc{len(self.silja_process()[-1])}_#predcyc{len(self.cyc.center)}')
+
+
+
+
     
 if __name__ == '__main__':
-    path = 'movie/val'
+    path = 'movie/dev'
     for name in os.listdir(path):
-        for i in range(len(os.listdir(f'{path}/{name}/pred'))):
-            PlotColoredCycleOnMIP(f'{path}/{name}/pred', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{i+1}",
-                    f'{path}/{name}/mip', f"duct-mip_{name.replace('LI_', '')}_tp{i+1}",
-                    f'{path}/{name}/cyc/srch=10, mem=1, thr=5, step=0.9, stop=3', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{i+1}", 'cyctpy')\
-                    .save_figure(f'{path}/{name}/cyc/srch=10, mem=1, thr=5, step=0.9, stop=3/cyc_mip')
+        tp_max = len(os.listdir(f'{path}/{name}/pred'))
+        for t in range(1, tp_max+1):
+            print(name, t)
+            CompareToSilja(f'{path}/{name}/pred', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}",
+                    f"{path}/{name}/mip/duct-mip_{name.replace('LI_', '')}_tp{t}.tif",
+                    f"{path}/{name}/cyc/srch=10, mem=3, thr=5, step=0.9, stop=3/pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}.cyctpy",
+                    f'tracking/silja/{name}_dev.csv', t)\
+                        .save_figure(f'{path}/{name}/cyc/srch=10, mem=3, thr=5, step=0.9, stop=3')

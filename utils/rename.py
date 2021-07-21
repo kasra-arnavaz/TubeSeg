@@ -84,8 +84,14 @@ def remove_skel(path):
         new_name = name.replace('skel_', '')
         os.rename(f'{path}/{name}', f'{path}/{new_name}')
 
-path = 'E:/Skel/m3/val/patches/uncalibrated/val_preds_patches/obj'
+def rename_m2(path):
+    for name in os.listdir(path):
+        new_name = name.replace('val_', 'ts_')
+        # print(new_name)
+        os.rename(f'{path}/{name}', f'{path}/{new_name}')
+
+path = 'D:/Skel/m2/ts/ts_preds_0.5'
 # tif_rename(path)
 # skel_rename(path)
 # val_tp_rename(path)
-remove_skel(path)
+rename_m2(path)

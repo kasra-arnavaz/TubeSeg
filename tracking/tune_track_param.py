@@ -48,9 +48,19 @@ class TuneTrackingParameters:
                             results[f'{search}, {mem}, {thr}, {step}, {stop}'] = [mean_DetA, mean_AssA, mean_Hota]
         return results
 
-    # def best_param(self, metric='hota'):
-    #     for param, measure in self.grid_search().items:
-    #         if metric == 'hota'
+    def best_param(self, metric='hota'):
+        best_measure = 0
+        results = self.grid_search()
+        print(results)
+        for params, measures in results.items():
+            if metric == 'hota': measure = measures[-1]
+            elif metric == 'assa': measure = measures[1]
+            elif metric == 'deta': measure = measures[0]
+            if measure >= best_measure:
+                best_measure = measure
+                best_params = params
+
+        return best_params, best_measure
 
 if __name__ == '__main__':
-    print(TuneTrackingParameters('movie/silja', search_list=[15], mem_list=[5], thr_list=[5,15,10,20], step_list=[0.9], stop_list=[3]).grid_search())
+    print(TuneTrackingParameters('movie/silja', search_list=[50, 25 ,15, 10], mem_list=[0,1,3,5,8], thr_list=[5,10,15,20], step_list=[0.9], stop_list=[3, 5, 7, 10]).best_param())

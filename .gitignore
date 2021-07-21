@@ -11,6 +11,7 @@
 *.html
 *.graph
 nx.py
+nx_orig.py
 *.js
 *.json
 *.css

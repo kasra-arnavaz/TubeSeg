@@ -73,5 +73,5 @@ class MassDataConversion:
 
 
 if __name__ == '__main__':
-    MassDataConversion('asdf/prob', 'asdf/pred', Prob2Pred, 0.7).read_convert_write()
+    MassDataConversion('D:/Skel/m2/ts/ts_probs', 'D:/Skel/m2/ts/ts_preds_0.5', Prob2Pred, 0.5).read_convert_write()
     

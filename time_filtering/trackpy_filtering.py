@@ -76,7 +76,7 @@ class TrackpyFiltering:
 if __name__ == '__main__':
     path = 'movie/dev'
     for name in os.listdir(path):
-        tp_max = len([file for file in os.listdir(f'{path}/{name}/pred') if file.endwith('.tif')])
+        tp_max = len([file for file in os.listdir(f'{path}/{name}/cyc') if file.endwith('.cyc')])
         data = Prediction(f'{path}/{name}/cyc', f"pred-0.7-semi-40_{name.replace('LI_', '')}", tp_max)
         track = Tracking(data, search_range=10, memory=3, thr=5, step=0.9, stop=3)
         TrackpyFiltering(data, track).save_filtered()

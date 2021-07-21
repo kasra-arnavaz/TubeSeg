@@ -23,7 +23,7 @@ class TuneTrackingParameters:
     def get_data(self):
         all_data = {}
         for name in os.listdir(self.path):
-            tp_max = len(os.listdir(f'{self.path}/{name}/pred'))
+            tp_max = len([file for file in os.listdir(f'{self.path}/{name}/cyc') if file.endwith('.cyc')])
             data = Prediction(f'{self.path}/{name}/cyc', f"pred-0.7-semi-40_{name.replace('LI_', '')}", tp_max)
             all_data[name] = data
         return all_data

@@ -23,7 +23,7 @@ class TuneTrackingParameters:
     def get_data(self):
         all_data = {}
         for name in os.listdir(self.path):
-            tp_max = len([file for file in os.listdir(f'{self.path}/{name}/cyc') if file.endwith('.cyc')])
+            tp_max = len([file for file in os.listdir(f'{self.path}/{name}/cyc') if file.endswith('.cyc')])
             data = Prediction(f'{self.path}/{name}/cyc', f"pred-0.7-semi-40_{name.replace('LI_', '')}", tp_max)
             all_data[name] = data
         return all_data
@@ -39,7 +39,7 @@ class TuneTrackingParameters:
                             for name, data in self.get_data.items():
                                 track = Tracking(data, search_range=search, memory=mem, thr=thr, step=step, stop=stop)
                                 TrackpyFiltering(data, track).write_centers_as_csv()
-                                hota = HOTA(f'movie/silja/{name}', name, f'movie/silja/{name}/cyc/srch={search}, mem={mem}, thr={thr}, step={step}, stop={stop}',\
+                                hota = HOTA(f'{self.path}/{name}', name, f'{self.path}/{name}/cyc/srch={search}, mem={mem}, thr={thr}, step={step}, stop={stop}',\
                                 f'center_{data.name}', 50)
                                 DetA.append(hota.DetA)
                                 AssA.append(hota.AssA)
@@ -63,4 +63,4 @@ class TuneTrackingParameters:
         return best_params, best_measure
 
 if __name__ == '__main__':
-    print(TuneTrackingParameters('movie/silja', search_list=[50, 25 ,15, 10], mem_list=[0,1,3,5,8], thr_list=[5,10,15,20], step_list=[0.9], stop_list=[3, 5, 7, 10]).best_param())
+    print(TuneTrackingParameters('movie/silja_test', search_list=[15], mem_list=[1], thr_list=[20], step_list=[0.9], stop_list=[5]).best_param())

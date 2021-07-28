@@ -2,9 +2,9 @@ from abc import ABC, abstractproperty
 import numpy as np
 import pandas as pd
 
-from graph.nx_graph import Component, Cycle
-
-
+from graph.nx_graph import Component, Cycle, NxGraph
+from utils.unpickle import read_pickle
+from time_filtering.trackpy_filtering import TrackpyFiltering
 
 class TopologyScore(ABC):
 
@@ -40,9 +40,10 @@ class TopologyScore(ABC):
         return np.sqrt(p1+p2+p3)
 
     def match_nodes(self):
-        tp_label, tp_pred, fp, fn = np.zeros([4, len(self.label_topology), len(self.prediction_topology)])
+        tp_label, tp_pred, fp, fn = np.zeros([4, len(self.label_topology.position), len(self.prediction_topology.position)])
         for i, label_pos in self.label_topology.position.items():
             for j, pred_pos in self.prediction_topology.position.items():
+                print('***************', pred_pos)
                 distance_matrix = self.euclidean(label_pos, pred_pos)
                 label_nearest_neighbor_distance = np.amin(distance_matrix, 1)
                 pred_nearest_neighbor_distance = np.amin(distance_matrix, 0)
@@ -82,7 +83,8 @@ class TopologyScore(ABC):
         return row_score, column_score
 
     def mean_row_and_column_scores(self):
-        label_len, pred_len = len(self.label_topology), len(self.prediction_topology)
+        print(self.label_topology.position)
+        label_len, pred_len = len(self.label_topology.position), len(self.prediction_topology.position)
         if label_len > 0 and pred_len > 0:
             row_score, column_score = self.row_and_column_scores()
             mean_row_score, mean_column_score = row_score.mean(), column_score.mean()
@@ -113,7 +115,6 @@ class ComponentScore(TopologyScore):
     def topology_type(self):
         return 'cmp'
 
-
 class CycleScore(TopologyScore):
 
     @property
@@ -129,12 +130,38 @@ class CycleScore(TopologyScore):
         return 'cyc'
 
 
+class PickledCycleScore(TopologyScore):
+
+    @property
+    def label_topology(self):
+        return read_pickle(f'{self.label_path}/{self.label_name}.cyc')
+
+    @property
+    def prediction_topology(self):
+        return read_pickle(f'{self.pred_path}/{self.pred_name}.cyctpy')
+
+    @property
+    def topology_type(self):
+        return 'cyctpy'
+
+
+
+
+
+
 if __name__ == '__main__':
-    cmp_score = ComponentScore('alaki', 'seg_LI_2019-09-19_emb1_pos1_tp264_A4_B4',
-                                'alaki', 'one-ten_40_val_pred0.7_LI_2019-09-19_emb1_pos1_tp264_A4_B4')
-    cyc_score = CycleScore('alaki', 'seg_LI_2019-09-19_emb1_pos1_tp264_A4_B4',
-                                'alaki', 'one-ten_40_val_pred0.7_LI_2019-09-19_emb1_pos1_tp264_A4_B4')
-    cmp_score.write_normalized_iou()
-    cyc_score.write_normalized_iou()
-    print(cmp_score.final_score())
+
+    # cmp_score = ComponentScore('alaki', 'seg_LI_2019-09-19_emb1_pos1_tp264_A4_B4',
+    #                             'alaki', 'one-ten_40_val_pred0.7_LI_2019-09-19_emb1_pos1_tp264_A4_B4')
+    # cyc_score = CycleScore('alaki', 'seg_LI_2019-09-19_emb1_pos1_tp264_A4_B4',
+    #                             'alaki', 'one-ten_40_val_pred0.7_LI_2019-09-19_emb1_pos1_tp264_A4_B4')
+    # cmp_score.write_normalized_iou()
+    # cyc_score.write_normalized_iou()
+    # print(cmp_score.final_score())
+    # print(cyc_score.final_score())
+
+    cyc_score = PickledCycleScore('D:/dataset/test/patches/cyc', 'label_ts_LI-2018-11-20-emb6-pos1_tp104-D1_A1',
+                                 'movie/test/LI_2018-11-20_emb6_pos1/cyc/srch=15, mem=1, thr=20, step=0.9, stop=5',
+                                 'pred-0.7-semi-40_2018-11-20_emb6_pos1_tp104')
+
     print(cyc_score.final_score())

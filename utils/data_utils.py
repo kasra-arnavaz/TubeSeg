@@ -190,6 +190,25 @@ def make_patches_320(saving_path, patch_path, image_path):
         os.makedirs(saving_path, exist_ok=True)
         tif.imwrite(f'{saving_path}/{name}.tif', x_que)
 
+def make_patches_movies(patch_path, movie_path, prefix, thr, epoch):
+
+    for movie_name in os.listdir(movie_path):
+        patches = [name[-6:-4] for name in os.listdir(patch_path) if (name.endswith('.tif')) and (movie_name.replace('_','-') in name)]
+        raw_name = movie_name.replace('LI_', '')
+        tif_preds = [name for name in os.listdir(f'{movie_path}/{movie_name}/pred') if name.endswith('.tif')]
+        print(tif_preds)
+        for patch in patches:
+            for t in range(len(tif_preds)):
+                print(patch, t)
+                y = tif.imread(f'{movie_path}/{movie_name}/pred/pred-{thr}-{prefix}-{epoch}_{raw_name}_tp{t+1}.tif')
+                y = y.reshape(-1,4,256,4,256).transpose(0,1,3,2,4)
+                y = y.reshape(-1,16,256,256).transpose(1,0,2,3,)
+                patch_index = get_patch_index(patch)
+                y = y[patch_index]
+                saving_path = f'{movie_path}/{movie_name}/pred_patches/{patch}'
+                os.makedirs(saving_path, exist_ok=True)
+                tif.imwrite(f'{saving_path}/pred-{thr}-{prefix}-{epoch}_{raw_name}_tp{t+1}_{patch}.tif', y)
+
 def get_patch_index(patch_id):
     grid = np.array(['A4','B4','C4','D4',
                         'A3','B3','C3','D3',
@@ -199,4 +218,4 @@ def get_patch_index(patch_id):
 
 
 if __name__ == '__main__':
-    make_patches_320('D:/dataset/test/patches/duct/320', 'D:/dataset/test/patches/duct', 'D:/dataset/test/images/duct')
+    make_patches_movies('D:/dataset/test/patches/label', 'movie/sanity', 'semi', 0.7, 40)

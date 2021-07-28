@@ -164,8 +164,7 @@ class Cycle(Topology):
 
 
 if __name__ == '__main__':
-    name = 'LI_2019-11-21_emb6_pos3'
-    path = f'movie/dev/silja/{name}/pred'
+    path = f'D:/dataset/test/patches/label'
     names = [name.replace('.tif', '') for name in os.listdir(path) if name.endswith('.tif')]
     for name in names:
         Cycle(path, name).write_pickle(f'{path}/../cyc')

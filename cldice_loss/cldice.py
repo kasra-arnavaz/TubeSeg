@@ -21,6 +21,7 @@ def soft_clDice_loss(iter_ = 50):
         Returns:
             [float32]: [loss value]
         """
+        y_pred = K.round(y_pred)
         smooth = 1.
         skel_pred = soft_skel(y_pred, iter_)
         skel_true = soft_skel(y_true, iter_)
@@ -41,6 +42,7 @@ def soft_dice(y_true, y_pred):
     Returns:
         [float32]: [loss value]
     """
+    y_pred = K.round(y_pred)
     smooth = 1
     intersection = K.sum((y_true * y_pred))
     coeff = (2. *  intersection + smooth) / (K.sum(y_true) + K.sum(y_pred) + smooth)
@@ -64,6 +66,7 @@ def soft_dice_cldice_loss(iters = 15, alpha=0.5):
         Returns:
             [float32]: [loss value]
         """
+        y_pred = K.round(y_pred)
         smooth = 1.
         skel_pred = soft_skel(y_pred, iters)
         skel_true = soft_skel(y_true, iters)

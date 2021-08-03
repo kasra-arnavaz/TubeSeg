@@ -1,6 +1,7 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv2D, Input, MaxPooling2D, concatenate, Conv2DTranspose, Cropping2D
 from tensorflow.keras.optimizers import Adam, SGD
+import tensorflow as tf
 from utils.data_utils import *
 from utils.patch_utils import *
 from utils.transform_data import *
@@ -56,8 +57,8 @@ class UNet:
         conv16 = Conv2D(8, 3, activation='relu', padding='same')(conv15)
         conv17 = Conv2D(1, 1, activation='sigmoid', padding='same')(conv16)
         out_prob = Cropping2D((self.margin,self.margin), name='seg')(conv17)
-
-        model = Model(input1, out_prob)
+        out_pred = tf.math.round(out_prob)
+        model = Model(input1, out_pred)
         #print(model.summary())
         return model 
 

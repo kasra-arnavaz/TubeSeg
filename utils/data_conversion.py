@@ -73,5 +73,5 @@ class MassDataConversion:
 
 
 if __name__ == '__main__':
-    MassDataConversion('D:/Skel/m2/ts/ts_probs', 'D:/Skel/m2/ts/ts_preds_0.5', Prob2Pred, 0.5).read_convert_write()
-    
+    for i in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+        MassDataConversion('results/unetcldice/2d/val', f'results/unetcldice/2d/val/pred-{i}', Prob2Pred, i).read_convert_write()

@@ -39,11 +39,28 @@ class TopologyScore(ABC):
         p3 = -2*np.dot(A,B.T)
         return np.sqrt(p1+p2+p3)
 
+    @property
+    def patch_id(self):
+        return self.label_name[-2:]
+
+    def get_allowed_range(self):
+        patch_map = np.array(['A1','B1','C1','D1',
+                    'A2','B2','C2','D2',
+                    'A3','B3','C3','D3',
+                    'A4','B4','C4','D4'])
+        index = int(np.argwhere(patch_map == self.patch_id))
+        col, row = np.unravel_index(index, (4,4))
+        return [col*256, (col+1)*256-1], [row*256, (row+1)*256-1]
+
+    def is_in_patch(self, pos):
+        y_range, x_range = self.get_allowed_range()
+        y, x = pos[:,1], pos[:,2]
+        return all((y <= y_range[1]) & (y>=y_range[0]) & (x <= x_range[1]) & (x>=x_range[0])) 
+
     def match_nodes(self):
-        tp_label, tp_pred, fp, fn = np.zeros([4, len(self.label_topology.position), len(self.prediction_topology.position)])
+        tp_label, tp_pred, fp, fn = np.zeros([4, len(self.label_topology.position), len(self.pred_pos)])
         for i, label_pos in self.label_topology.position.items():
-            for j, pred_pos in self.prediction_topology.position.items():
-                print('***************', pred_pos)
+            for j, pred_pos in enumerate(self.pred_pos.values()):
                 distance_matrix = self.euclidean(label_pos, pred_pos)
                 label_nearest_neighbor_distance = np.amin(distance_matrix, 1)
                 pred_nearest_neighbor_distance = np.amin(distance_matrix, 0)
@@ -83,8 +100,9 @@ class TopologyScore(ABC):
         return row_score, column_score
 
     def mean_row_and_column_scores(self):
-        print(self.label_topology.position)
-        label_len, pred_len = len(self.label_topology.position), len(self.prediction_topology.position)
+        self.pred_pos = {j: pred_pos for j, pred_pos in self.prediction_topology.position.items() if self.is_in_patch(pred_pos)}
+        label_len, pred_len = len(self.label_topology.position), len(self.pred_pos)
+        print(label_len, pred_len)
         if label_len > 0 and pred_len > 0:
             row_score, column_score = self.row_and_column_scores()
             mean_row_score, mean_column_score = row_score.mean(), column_score.mean()
@@ -143,7 +161,6 @@ class PickledCycleScore(TopologyScore):
     @property
     def topology_type(self):
         return 'cyctpy'
-
 
 
 

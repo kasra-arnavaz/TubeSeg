@@ -37,6 +37,7 @@ class TuneTrackingParameters:
                         for stop in self.stop_list:
                             DetA, AssA, Hota = [], [], []
                             for name, data in self.get_data.items():
+                                print(name, search, mem, thr, step, stop)
                                 track = Tracking(data, search_range=search, memory=mem, thr=thr, step=step, stop=stop)
                                 TrackpyFiltering(data, track).write_centers_as_csv()
                                 hota = HOTA(f'{self.path}/{name}', name, f'{self.path}/{name}/cyc/srch={search}, mem={mem}, thr={thr}, step={step}, stop={stop}',\
@@ -51,7 +52,9 @@ class TuneTrackingParameters:
     def best_param(self, metric='hota'):
         best_measure = 0
         results = self.grid_search()
-        print(results)
+        with open(f'{self.path}/results.txt', 'w') as f:
+            for k, v in results.items():
+                f.write(f'{k}: \t {v}\n')
         for params, measures in results.items():
             if metric == 'hota': measure = measures[-1]
             elif metric == 'assa': measure = measures[1]
@@ -63,4 +66,4 @@ class TuneTrackingParameters:
         return best_params, best_measure
 
 if __name__ == '__main__':
-    print(TuneTrackingParameters('movie/silja_test', search_list=[15], mem_list=[1], thr_list=[20], step_list=[0.9], stop_list=[5]).best_param())
+    print(TuneTrackingParameters('movie/silja_val_dev', search_list=[10,15], mem_list=[1,3,5], thr_list=[5,10,15], step_list=[0.9], stop_list=[3,5]).grid_search())

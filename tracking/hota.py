@@ -55,7 +55,7 @@ class HOTA:
         DetA_frame = []
         for frame in range(1, self.num_frame+1):
             tp, fn, fp = self.detection_frame(frame)
-            DetA_frame.append(tp/(tp+fn+fp))
+            if tp+fn+fp >0: DetA_frame.append(tp/(tp+fn+fp))
         return sum(DetA_frame)/len(DetA_frame)
 
     def match_idx(self, frame):
@@ -107,8 +107,8 @@ class HOTA:
                 pr_ID_k = self.pr_data.loc[pr_idx_k, 'particle']
                 if (pr_ID_c == pr_ID_k): fpa += 1
             A_c.append(tpa/(tpa+fna+fpa))
-        return sum(A_c)/len(A_c)
-
+        if len(A_c) >0: return sum(A_c)/len(A_c)
+        else: return 0
     @property
     def HOTA(self):
         return np.sqrt(self.AssA*self.DetA)
@@ -119,7 +119,7 @@ class HOTA:
 
 
 if __name__ == '__main__':
-    HOTA('.', 'LI 2018-12-07_emb6_pos4_val', 'movie/val/LI_2018-12-07_emb6_pos4/cyc/srch=10, mem=3, thr=20, step=0.9, stop=3',\
-         'center_pred-0.7-semi-40_2018-12-07_emb6_pos4',50).print()
+    HOTA('tracking/silja', 'LI_2018-12-07_emb6_pos3_dev', 'movie/dev/LI_2018-12-07_emb6_pos3/cyc/srch=10, mem=3, thr=5, step=0.9, stop=3',\
+         'center_pred-0.7-semi-40_2018-12-07_emb6_pos3',50).print()
     # HOTA('tracking/hota_sanity', 'gt_sanity', 'tracking/hota_sanity', 'pr_sanity_c', 1).print()
 

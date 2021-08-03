@@ -157,20 +157,20 @@ def crop_320(write_dir, image_dir, image_name, patch_id):
 
 # write_patches_from_images('E:/dataset/val/patches/duct/320', 'E:/dataset/val/images/duct', 'E:/dataset/val/patches/duct')
 
-def make_patches(saving_path, target_path, pred_path, prefix, epoch, thr):
+def make_patches(saving_path, target_path, pred_path, prefix, epoch):
 
     names_target = [f.replace('label_','').replace('.tif' ,'') for f in os.listdir(target_path) if f.endswith('tif') ]
 
     for name in names_target:
         patch_id = name[-2:]
         raw_name = name.replace(patch_id, '')
-        y = tif.imread(f'{pred_path}/pred-{thr}-{prefix}-{epoch}_{raw_name}.tif')
+        y = tif.imread(f'{pred_path}/prob-{prefix}-{epoch}_{raw_name}.tif')
         y = y.reshape(-1,4,256,4,256).transpose(0,1,3,2,4)
         y = y.reshape(-1,16,256,256).transpose(1,0,2,3,)
         patch_index = get_patch_index(patch_id)
         y = y[patch_index]
         os.makedirs(saving_path, exist_ok=True)
-        tif.imwrite(f'{saving_path}/pred-{thr}-{prefix}-{epoch}_{raw_name}{patch_id}.tif', y)
+        tif.imwrite(f'{saving_path}/prob-{prefix}-{epoch}_{raw_name}{patch_id}.tif', y)
 
 def make_patches_320(saving_path, patch_path, image_path):
 
@@ -218,4 +218,4 @@ def get_patch_index(patch_id):
 
 
 if __name__ == '__main__':
-    make_patches_movies('D:/dataset/test/patches/label', 'movie/sanity', 'semi', 0.7, 40)
+    make_patches(f'results/unetcldice/2d/val/patches', 'D:/dataset/val/patches/label', f'results/unetcldice/2d/val', 'unetcldice', 200)

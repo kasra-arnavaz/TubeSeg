@@ -19,7 +19,7 @@ class SequentialFiltering:
 
     @cached_property
     def all_topology(self):
-        return [read_pickle(self.path, f'{self.name}_tp{i+1}', self.extension) for i in range(self.tp_max)]
+        return [read_pickle(f'{self.path}/{self.name}_tp{i+1}.{self.extension}') for i in range(self.tp_max)]
 
     @staticmethod
     def min_pointclould_distance(pointcloud1, pointcloud2):
@@ -79,8 +79,7 @@ if __name__ == '__main__':
     path = 'movie/test'
     import os
     for name in os.listdir(path):
-        name = 'LI_2018-11-20_emb7_pos4'
-        tp_max = len(os.listdir(f'{path}/{name}/skel'))
-        SequentialFiltering(f'{path}/{name}/cmp', f'pred0.7_{name}', 'cmp', tp_max=tp_max, threshold=3).save_filtered()
-        SequentialFiltering(f'{path}/{name}/cyc', f'pred0.7_{name}', 'cyc', tp_max=tp_max, threshold=3).save_filtered()
-        break
+        print(name)
+        tp_max = len(os.listdir(f'{path}/{name}/pred'))
+        SequentialFiltering(f'{path}/{name}/cmp', f"pred-0.7-semi-40_{name.replace('LI_', '')}", 'cmp', tp_max=tp_max, threshold=3).save_filtered()
+        # SequentialFiltering(f'{path}/{name}/cyc', f'pred0.7_{name}', 'cyc', tp_max=tp_max, threshold=3).save_filtered()

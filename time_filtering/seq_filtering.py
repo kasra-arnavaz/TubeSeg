@@ -81,5 +81,5 @@ if __name__ == '__main__':
     for name in os.listdir(path):
         print(name)
         tp_max = len(os.listdir(f'{path}/{name}/pred'))
-        SequentialFiltering(f'{path}/{name}/cmp', f"pred-0.7-semi-40_{name.replace('LI_', '')}", 'cmp', tp_max=tp_max, threshold=3).save_filtered()
+        SequentialFiltering(f'{path}/{name}/cmp', f"pred-0.7-semi-40_{name.replace('LI_', '')}", 'cmp', tp_max=tp_max, threshold=5).save_filtered()
         # SequentialFiltering(f'{path}/{name}/cyc', f'pred0.7_{name}', 'cyc', tp_max=tp_max, threshold=3).save_filtered()

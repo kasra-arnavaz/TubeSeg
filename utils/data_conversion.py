@@ -73,5 +73,5 @@ class MassDataConversion:
 
 
 if __name__ == '__main__':
-    for i in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-        MassDataConversion('results/unetcldice/2d/val', f'results/unetcldice/2d/val/pred-{i}', Prob2Pred, i).read_convert_write()
+    # for i in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+    MassDataConversion('D:/pia', 'D:/pia/mip', Duct2Mip).read_convert_write()

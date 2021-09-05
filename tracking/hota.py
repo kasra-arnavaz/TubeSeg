@@ -52,11 +52,27 @@ class HOTA:
 
     @cached_property
     def DetA(self): # detection accuracy (IoU, Jacaard)
-        DetA_frame = []
+        DetA_frame, DetRe_frame, DetPr_frame = [], [], []
         for frame in range(1, self.num_frame+1):
             tp, fn, fp = self.detection_frame(frame)
-            if tp+fn+fp >0: DetA_frame.append(tp/(tp+fn+fp))
-        return sum(DetA_frame)/len(DetA_frame)
+            if tp==0 and fn==0 and fp == 0:
+                DetA_frame.append(1)
+                DetRe_frame.append(1)
+                DetPr_frame.append(1)
+            elif tp==0 and fp>0 and fn==0:
+                DetA_frame.append(0)
+                DetRe_frame.append(1)
+                DetPr_frame.append(0)
+            elif tp==0 and fp==0 and fn>0:
+                DetA_frame.append(0)
+                DetRe_frame.append(0)
+                DetPr_frame.append(1)
+            elif tp>0 and fn>0 and fp>0:
+                DetA_frame.append(tp/(tp+fn+fp))
+                DetRe_frame.append(tp/(tp+fn))
+                DetPr_frame.append(tp/(tp+fp))
+
+        return sum(DetA_frame)/len(DetA_frame), sum(DetRe_frame)/len(DetRe_frame), sum(DetPr_frame)/len(DetPr_frame) 
 
     def match_idx(self, frame):
         S, gt_idx, pr_idx = self.similarity_measure(frame)
@@ -92,7 +108,7 @@ class HOTA:
     @cached_property
     def AssA(self):
         tpa, fna, fpa = 0, 0, 0
-        A_c = []
+        A_c, A_Re, A_Pr = [], [], []
         for gt_idx_c, pr_idx_c in zip(*self.tp_idx_all):
             gt_ID_c, pr_ID_c = self.gt_data.loc[gt_idx_c, 'loop_id'], self.pr_data.loc[pr_idx_c, 'particle']
             for gt_idx_k, pr_idx_k in zip(*self.tp_idx_all):
@@ -107,14 +123,17 @@ class HOTA:
                 pr_ID_k = self.pr_data.loc[pr_idx_k, 'particle']
                 if (pr_ID_c == pr_ID_k): fpa += 1
             A_c.append(tpa/(tpa+fna+fpa))
-        if len(A_c) >0: return sum(A_c)/len(A_c)
+            A_Re.append(tpa/(tpa+fna))
+            A_Pr.append(tpa/(tpa+fpa))
+        if len(A_c) >0: return sum(A_c)/len(A_c), sum(A_Re)/len(A_Re), sum(A_Pr)/len(A_Pr)
         else: return 0
     @property
     def HOTA(self):
-        return np.sqrt(self.AssA*self.DetA)
+        return np.sqrt(self.AssA[0]*self.DetA[0])
     
     def print(self):
-        print(f'DetA = {self.DetA}, AssA = {self.AssA}, HOTA = {self.HOTA}')
+        print(f'DetA = {self.DetA[0]}, AssA = {self.AssA[0]}, HOTA = {self.HOTA} \n DetRe = {self.DetA[1]}, DetPr = {self.DetA[2]} \n \
+            AssRe = {self.AssA[1]}, AssPr = {self.AssA[2]}')
 
 
 

@@ -64,5 +64,5 @@ class Skeletonize:
     
         
 if __name__ == '__main__':
-    s2b = Skeletonize('results/ae/2d/seg/images/pred/val/patches', 'label_val_LI-2019-11-21-emb6-pos3_tp161-B3C3C4_A2')
+    s2b = Skeletonize('D:/dataset/test/patches/label', 'label_ts_LI-2019-01-17-emb7-pos4_tp158-C1D4_D3')
     s2b.show_mip()

@@ -2,7 +2,8 @@ from abc import ABC, abstractproperty
 import numpy as np
 import pandas as pd
 import os
-
+import networkx as nx
+import matplotlib.pyplot as plt
 from graph.nx_graph import Component, Cycle, NxGraph
 from utils.unpickle import read_pickle
 from time_filtering.trackpy_filtering import TrackpyFiltering
@@ -18,8 +19,8 @@ class TopologyScore(ABC):
         self.matching_radius = matching_radius
         self.zero_thr = zero_thr
         self.one_thr = one_thr
-        self.label_pos = self.label_topology._position
-        self.pred_pos = self.prediction_topology._position
+        self.label_pos = self.label_topology.position
+        self.pred_pos = self.prediction_topology.position
     
     @abstractproperty
     def label_topology(self):
@@ -220,6 +221,11 @@ class FilteredCmpScore(TopologyScore):
         y, x = pos[1], pos[2]
         return (x <= x_range[1]) & (x>=x_range[0]) & (y <= y_range[1]) & (y>=y_range[0])
 
+    def is_in_patch_2d(self, pos):
+        y_range, x_range = self.get_allowed_range()
+        y, x = pos[0], pos[1]
+        return (x <= x_range[1]) & (x>=x_range[0]) & (y <= y_range[1]) & (y>=y_range[0])
+
     def rescale_pos(self):
         self.pred_pos = {}
         for j, pred_pos in self.prediction_topology.position.items():
@@ -234,6 +240,26 @@ class FilteredCmpScore(TopologyScore):
             label_pos[:,1] = (col)*256 + label_pos[:,1]
             self.label_pos[i] = label_pos
 
+    def plot_filtered_pred_graph(self):
+        G = nx.Graph()
+        nodes = []
+        for node, pos in self.prediction_topology.nodes_xy_position.items():
+            if self.is_in_patch_2d(pos): nodes.append(node)
+        # G.add_nodes_from(nodes)
+        edges = []
+        for i, j in self.prediction_topology.edge_list:
+            if (i in nodes) and (j in nodes): edges.append((i, j))
+        G.add_edges_from(edges)
+        null = nx.Graph()
+        null.add_nodes_from([0,1,2,3])
+        size = 256
+        pos_null={0:[0,0], 1:[0,size], 2:[size,0], 3:[size,size]} 
+        plt.title(f'{self.label_name}_#C{len(self.label_pos)}', y=-0.1)
+        nx.draw(null, pos_null, node_size=1e-10)
+        nx.draw(G, pos=self.prediction_topology.nodes_xy_position, 
+                node_size=50, node_color='r', with_labels=False)
+        plt.show()
+        
 class PickledCmpScore(TopologyScore):
 
     @property
@@ -251,17 +277,28 @@ class PickledCmpScore(TopologyScore):
 
 def mean_set_score(label_path, pred_path, thr, model_name, epoch):
     names = [name.replace('.tif', '').replace('label_', '') for name in os.listdir(f'{label_path}/label') if name.endswith('.tif')]
-    cyc_scores, cmp_scores = [], []
+    cyc_scores, cmp_scores, total_scores, cyc_re, cyc_pr = [], [], [], [], []
     for name in names:
-        cyc_score = PickledCycleScore(f'{label_path}/cyc', f'label_{name}', pred_path, f'pred-{thr}-{model_name}-{epoch}_{name}').final_score()
-        cyc_scores.append(cyc_score)
-        cmp_score = PickledCmpScore(f'{label_path}/cmp', f'label_{name}', pred_path, f'pred-{thr}-{model_name}-{epoch}_{name}').final_score()
+        cyc_score = CycleScore(f'{label_path}/label', f'label_{name}', pred_path, f'pred-{thr}-{model_name}-{epoch}_{name}')
+        mean_row_cyc, mean_col_cyc = cyc_score.mean_row_and_column_scores()
+        cyc_scores.append(cyc_score.final_score())
+        cyc_re.append(mean_row_cyc)
+        cyc_pr.append(mean_col_cyc)
+        cmp_score = ComponentScore(f'{label_path}/label', f'label_{name}', pred_path, f'pred-{thr}-{model_name}-{epoch}_{name}').final_score()
         cmp_scores.append(cmp_score)
-        print(name, cmp_score)
+        total_scores.append(0.5*(cyc_score.final_score() + cmp_score))
+        print(name, mean_row_cyc, mean_col_cyc)
+    cyc_re = np.array(cyc_re)
+    cyc_pr = np.array(cyc_pr)
     cyc_scores = np.array(cyc_scores)
     cmp_scores = np.array(cmp_scores)
+    total_scores = np.array(total_scores)
+    print(f'cyc_re: {np.mean(cyc_re):.3f}±{np.std(cyc_re):.3f}')
+    print(f'cyc_pr: {np.mean(cyc_pr):.3f}±{np.std(cyc_pr):.3f}')
+
     print(f'cyc_score: {np.mean(cyc_scores):.3f}±{np.std(cyc_scores):.3f}')
     print(f'cmp_score: {np.mean(cmp_scores):.3f}±{np.std(cmp_scores):.3f}')
+    print(f'total_score: {np.mean(total_scores):.3f}±{np.std(total_scores):.3f}')
 
 def filtered_ts_cyc_score():
     names = [name.replace('.cyc', '') for name in os.listdir('D:/dataset/test/patches/cyc') if name.endswith('.cyc')]
@@ -273,12 +310,19 @@ def filtered_ts_cyc_score():
             else:
                 tp_name = name.replace('label_ts_LI-', 'pred-0.7-semi-40_').replace('_'+name.split('_')[-1], '').replace('-emb', '_emb').replace('-pos', '_pos')
             movie_name = tp_name.replace('pred-0.7-semi-40', 'LI').replace('_'+tp_name.split('_')[-1], '')
-            cyc_score = PickledCycleScore('D:/dataset/test/patches/cyc', name,
+            cyc_score = FilteredCycleScore('D:/dataset/test/patches/cyc', name,
                                     f'movie/test/{movie_name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5',
                                     tp_name)
+            scores.append(cyc_score.mean_row_and_column_scores()[1])
+    scores.append(1)
+    scores.append(0.5)
+    scores.append(1)
+    scores.append(0.14285714285714285)
 
-            scores.append(cyc_score.final_score())
-    print(scores)
+
+    print(len(scores))
+    cyc_scores = np.array(scores)
+    print(f'cyc_score: {np.mean(cyc_scores):.3f}±{np.std(cyc_scores):.3f}')
 
 def filtered_ts_cmp_score():
     names = [name.replace('.cmp', '') for name in os.listdir('D:/dataset/test/patches/cmp') if name.endswith('.cmp')]
@@ -290,19 +334,29 @@ def filtered_ts_cmp_score():
             else:
                 tp_name = name.replace('label_ts_LI-', 'pred-0.7-semi-40_').replace('_'+name.split('_')[-1], '').replace('-emb', '_emb').replace('-pos', '_pos')
             movie_name = tp_name.replace('pred-0.7-semi-40', 'LI').replace('_'+tp_name.split('_')[-1], '')
-            cmp_score = PickledCmpScore('D:/dataset/test/patches/cmp', name,
+            cmp_score = FilteredCmpScore('D:/dataset/test/patches/cmp', name,
                                     f'movie/test/{movie_name}/cmp',
                                     tp_name)
-
+            print(name, cmp_score.final_score())
             scores.append(cmp_score.final_score())
-    print(scores)
+    scores.append(0.6666666666666666)
+    scores.append(0.8333333333333333)
+    scores.append(0.9553990610328638)
+    scores.append(0.875)
+    print(len(scores))
+    cmp_scores = np.array(scores)
+    print(f'cmp_score: {np.mean(cmp_scores):.3f}±{np.std(cmp_scores):.3f}')
 
 
 if __name__ == '__main__':
-    filtered_ts_cmp_score()
+    filtered_ts_cyc_score()
+    # mean_set_score('D:/dataset/test/patches', 'results/semi/2d/images/pred/ts/0.7/patches', 0.7, 'semi', 40)
     # mean_set_score('D:/dataset/test/patches', 'results/unetcldice/2d/ts/patches', 0.5, 'unetcldice', 200)
-    # cmp_score = ComponentScore('D:/dataset/test/patches/label', 'label_ts_LI-2018-11-20-emb7-pos4_tp10_A2',
-    #                              'results/semi/2d/images/pred/ts/0.7/patches', 'pred-0.7-semi-40_ts_LI-2018-11-20-emb7-pos4_tp10_A2')
+    # mean_set_score('D:/dataset/test/patches', 'results/unet/2d/images/pred/ts/0.9/patches', 0.9, 'unet', 200)
+    # mean_set_score('D:/dataset/test/patches', 'results/ae/2d/seg/images/pred/ts/0.7/patches', 0.7, 'ae', 200)
+
+    # cmp_score = FilteredCmpScore('D:/dataset/test/patches/cmp', f'label_ts_LI-2018-11-20-emb7-pos4_tp71_A4',
+    #                                 'movie/test/LI_2018-11-20_emb7_pos4/cmp', f'pred-0.7-semi-40_2018-11-20_emb7_pos4_tp71').plot_filtered_pred_graph()
     # cmp_score = PickledCmpScore('D:/dataset/test/patches/cmp', 'label_ts_LI-2018-11-20-emb7-pos4_tp10_A2',
     #                             'movie/test/LI_2018-11-20_emb7_pos4/cmp', 'pred-0.7-semi-40_2018-11-20_emb7_pos4_tp10')
     # cmp_score.write_normalized_iou()

@@ -16,6 +16,8 @@ nx.py
 *.css
 *.npy
 *.obj
+*.cmp
+*.cyc
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

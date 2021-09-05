@@ -24,7 +24,6 @@ import tensorflow as tf
 class Graph:
 
     def __init__(self, name, path, make_new=False, create_cyc_obj=False):
-        print(name)
         self.name = name
         self.path = path
 
@@ -269,11 +268,11 @@ class Graph:
                     d1 = (tp_gt+2*fn)/(tp_gt+fn)
                     d2 = (tp_pred+2*fp)/(tp_pred+fp)
                     iou_normalized = (n1+n2)/(d1+d2)
-##                    if iou_normalized >= 0.7: iou_normalized = 1
+                    if iou_normalized >= 0.7: iou_normalized = 1
                     S[i,j] = iou_normalized
-##            S_filtered = S*(S>=0.3)
-##            score_row = np.minimum(1, np.sum(S_filtered, 1))
-##            score_col = np.minimum(1, np.sum(S_filtered, 0))
+            S_filtered = S*(S>=0.3)
+            score_row = np.minimum(1, np.sum(S_filtered, 1))
+            score_col = np.minimum(1, np.sum(S_filtered, 0))
             score_row = np.minimum(1, np.sum(S, 1))
             score_col = np.minimum(1, np.sum(S, 0))
        
@@ -631,7 +630,7 @@ def thr_selection(target_path, pred_path, prefix, epoch_list, thr_list, load=Fal
                 for i, name in enumerate(names):
                     t = Graph(f'label_{name}', target_path, make_new=False)
                     # y = Graph(f'{prefix}_{ep}_{split}_pred{np.round(thr, 2)}_{name}', pred_path, make_new=False)
-                    y = Graph(f'pred-{thr}-{prefix}-{ep}_{name}', f'{pred_path}/pred-{thr}/patches', make_new=False)
+                    y = Graph(f'pred-{thr}-{prefix}-{ep}_{name}', f'{pred_path}', make_new=False)
                     S[0,:,i,j,k], S[1,:,i,j,k] = Graph.my_matching(t,y)                   
         np.save(f'{pred_path}/score_{prefix}_{thr_list}.npy', S)
     S = np.load(f'{pred_path}/score_{prefix}_{thr_list}.npy')
@@ -677,22 +676,23 @@ def thr_selection_pixel(target_path, pred_path, prefix, epoch, split, thr_list):
         for i, name in enumerate(names):
             T, Y = 0, 0
             t = tif.imread(f'{target_path}/label_{split}_{name}.tif').reshape(-1)
-            y = tif.imread(f'{pred_path}/pred-{thr}/patches/pred-{np.round(thr, 2)}-{prefix}-{epoch}_{split}_{name}.tif').reshape(-1)
+            y = tif.imread(f'{pred_path}/pred-{np.round(thr, 2)}-{prefix}-{epoch}_{split}_{name}.tif').reshape(-1)
             T = np.append(T,t)
             Y = np.append(Y,y)
+            Y = np.round(Y)
             T = np.clip(T[1:], 0, 1)
             Y = np.clip(Y[1:], 0, 1)
-        plt.hist(Y, bins=20)
-        plt.show()
-
-    #         tn, fp, fn, tp = confusion_matrix(T, Y).ravel()
-    #         iou[j,i] = tp/(tp+fp+fn)
-    # mean_iou = np.mean(iou, 1)
-    # std_iou = np.std(iou, 1)
-    # idx_best = np.argmax(mean_iou)
-    # best_thr = thr_list[idx_best]
-    # print(f'Best thr for {prefix}: {best_thr}')
-    # print(f'Best score for {prefix}: {mean_iou[idx_best]}±{std_iou[idx_best]}')
+        # plt.hist(Y, bins=20)
+        # plt.show()
+            print(np.unique(T), np.unique(Y))
+            tn, fp, fn, tp = confusion_matrix(T, Y).ravel()
+            iou[j,i] = tp/(tp+fp+fn)
+    mean_iou = np.mean(iou, 1)
+    std_iou = np.std(iou, 1)
+    idx_best = np.argmax(mean_iou)
+    best_thr = thr_list[idx_best]
+    print(f'Best thr for {prefix}: {best_thr}')
+    print(f'Best score for {prefix}: {mean_iou[idx_best]}±{std_iou[idx_best]}')
     # plt.figure()
     # plt.plot(thr_list, mean_iou, '-o', label='mean')
     # plt.fill_between(thr_list, mean_iou-std_iou, mean_iou+std_iou, alpha=0.5, label='1 std')
@@ -1245,7 +1245,7 @@ def loop_center_csv(path, name, max_frame):
     df = pd.DataFrame(center_frame[1:], columns=['z', 'y', 'x', 'frame'])
     df.to_csv(f'{path}/{name}.csv')
     
-# thr_selection('D:/dataset/val/patches/label', 'results/unetcldice/2d/val', 'unetcldice', [200], [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+thr_selection('D:/dataset/test/patches/label', 'results/semi/2d/images/pred/ts/0.7/patches', 'semi', [40], [0.7])
 # print(os.listdir('LI_2018-11-20_emb7_pos4_preds'))
 #loop_center_csv('E:/Skel/movie_pred/LI_2019-02-05_emb5_pos4/skel', 'pred0.7_LI_2019-02-05_emb5_pos4', 289)
 ##draw_time_image('LI_2018-11-20_emb7_pos4_preds')
@@ -1288,7 +1288,7 @@ def loop_center_csv(path, name, max_frame):
 ##for name in names:
 ##    t = Graph(f'one-ten_40_ts_pred0.7_{name}', 'm3/ts/ts_preds_patches', create_cyc_obj=True)
 
-##t = Graph('seg_LI_2019-08-30_emb2_pos1_tp162_D2D3D4_A2', 'target_val_patches')
+# Graph('pred-0.5-unetcldice-200_ts_LI-2019-07-03-emb7-pos2_tp98-D3D4_B4', 'results/unetcldice/2d/ts/patches', create_cyc_obj=True)
 ##t.plot_one_graph(mode='cyc')
 ##plt.show()
 ##tr_loss('m1/tr_loss', np.arange(1,201))
@@ -1332,5 +1332,5 @@ def loop_center_csv(path, name, max_frame):
 
 ##prob2ent('m3/ts/patches/ts_lins_patches/calibrated')
 # ent_target_pred('m3/ts/patches/ts_lins_patches/calibrated/ent', 'target_ts_patches', 'm3/ts/patches/ts_preds_patches', [0.7], [40], 'ts', 'one-ten')
-thr_selection_pixel('D:/dataset/val/patches/label', 'results/unetcldice/2d/val', 'unetcldice', 200, 'val', [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+# thr_selection_pixel('D:/dataset/test/patches/label', 'results/unetcldice/2d/ts/patches', 'unetcldice', 200, 'ts', [0.5])
 

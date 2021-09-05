@@ -136,7 +136,7 @@ class Component(Topology):
         return nx.algorithms.components.connected_components(self.graph.define_graph())
 
     def nodes_in_small_components(self):
-        nodes_of_large_cmp = list(itertools.chain(*self.topology_nodes))
+        nodes_of_large_cmp = list(itertools.chain(*self._topology_nodes))
         return list( set(self.graph.define_graph().nodes) - set(nodes_of_large_cmp) )
 
     def refined_graph(self):
@@ -164,8 +164,8 @@ class Cycle(Topology):
 
 
 if __name__ == '__main__':
-    path = f'D:/dataset/test/patches/label'
+    path = 'results/semi/2d/images/pred/ts/0.7/patches'
     names = [name.replace('.tif', '') for name in os.listdir(path) if name.endswith('.tif')]
     for name in names:
-        Cycle(path, name).write_pickle(f'{path}/../cyc')
-        Component(path, name).write_pickle(f'{path}/../cmp')
+        Component(path, name).write_pickle(f'{path}')
+        Cycle(path, name).write_pickle(f'{path}')

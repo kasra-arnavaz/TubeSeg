@@ -220,4 +220,4 @@ def get_patch_index(patch_id):
 
 
 if __name__ == '__main__':
-    make_patches(f'results/ae/2d/seg/images/pred/val/patches', 'D:/dataset/val/patches/label', f'results/ae/2d/seg/images/pred/val', 'ae', 200, [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+    make_patches('results/semi/2d/images/pred/ts/0.7/patches', 'D:/dataset/test/patches/label', f'results/semi/2d/images/pred/ts/0.7', 'semi', 40, [0.7])

@@ -63,6 +63,6 @@ class PlotGraph:
 
 
 if __name__ == '__main__':
-    PlotGraph('movie/test/LI_2018-11-20_emb7_pos4/pred', 'pred-0.7-semi-40_2018-11-20_emb7_pos4_tp71').show_figure()
-    # PlotGraph('D:/dataset/test/patches/label', 'label_ts_LI-2018-11-20-emb7-pos4_tp71_A4').show_figure()
-    # PlotGraph('results/semi/2d/images/pred/ts/0.7/patches', 'pred-0.7-semi-40_ts_LI-2018-11-20-emb7-pos4_tp71_A4').show_figure()
+    # PlotGraph('movie/test/LI_2019-02-05_emb5_pos4/pred', 'pred-0.7-semi-40_2019-02-05_emb5_pos4_tp133').show_figure()
+    # PlotGraph('D:/dataset/test/patches/label', 'label_ts_LI-2019-02-05-emb5-pos4_tp133-A4_C1').show_figure()
+    PlotGraph('results/semi/2d/images/pred/ts/0.7/patches', 'pred-0.7-semi-40_ts_LI-2019-02-05-emb5-pos4_tp133-A4_C1').show_figure()

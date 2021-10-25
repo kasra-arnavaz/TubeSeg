@@ -147,22 +147,25 @@ class CompareToSilja(PlotColoredCycOnMIP):
 if __name__ == '__main__':
     path = 'movie/test'
     for name in os.listdir(path):
-        print(name)
+        name = 'LI_2018-11-20_emb7_pos4'
     # for name in ['LI_2019-02-05_emb5_pos4', 'LI_2018-11-20_emb7_pos4', 'LI_2018-11-20_emb6_pos1']:
     # for name in ['LI_2019-07-03_emb7_pos2', 'LI_2019-07-03_emb7_pos3', 'LI_2019-07-03_emb7_pos4']:
     #     name = 'LI_2019-07-03_emb7_pos2'
         tp_max = len(os.listdir(f'{path}/{name}/pred'))
         for t in range(1, tp_max+1):
-            PlotComponentOnMIP(f'{path}/{name}/pred', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}",
+            PlotCmpCycOnMIP(f'{path}/{name}/pred', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}",
                             f"{path}/{name}/mip/duct-mip_{name.replace('LI_', '')}_tp{t}.tif",
-                            f"{path}/{name}/cmp/pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}.cmp")\
-                        .save_figure(f'{path}/{name}/cmp')
-            # PlotColoredCycOnMIP(f'{path}/{name}/pred', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}",
-            #         f"{path}/{name}/mip/duct-mip_{name.replace('LI_', '')}_tp{t}.tif",
-            #         f"{path}/{name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5/pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}.cyctpy")\
-            #             .save_figure(f'{path}/{name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5')
+                            f"{path}/{name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5/pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}.cyctpy",
+                            f"{path}/{name}/cmp/pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}.cmpseq3")\
+                        .save_figure(f'{path}/{name}/cmpcyc')
+            
+             
+            # cyc = read_pickle(f"{path}/{name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5/pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}.cyctpy")
+            # print(len(cyc.position))
+                        # .save_figure(f'{path}/{name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5')
             # CompareToSilja(f'{path}/{name}/pred', f"pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}",
             #         f"{path}/{name}/mip/duct-mip_{name.replace('LI_', '')}_tp{t}.tif",
             #         f"{path}/{name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5/pred-0.7-semi-40_{name.replace('LI_', '')}_tp{t}.cyctpy",
             #         f'tracking/silja/{name}_test.csv', t)\
             #             .save_figure(f'{path}/{name}/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5')
+        break

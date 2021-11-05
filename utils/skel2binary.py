@@ -29,7 +29,7 @@ class Skeletonize:
 
     @staticmethod
     def line_segment(p, q):
-        return set([tuple(np.round(t*p + (1-t)*q).astype(int)) for t in np.linspace(0,1,10)])
+        return set([tuple(np.round(t*p + (1-t)*q).astype(int)) for t in np.linspace(0,1,100)])
     
     def skel_indices(self):
         idx = set()
@@ -48,6 +48,10 @@ class Skeletonize:
         binary[self.skel_indices()] = 1
         return binary
 
+    def write_tif(self, saving_path=None):
+        if saving_path is None: saving_path = self.path
+        tif.imwrite(f'{saving_path}/bin_{self.name}.tif', self.binary())
+
     def write_npy(self, saving_path=None):
         if saving_path is None: saving_path = self.path
         np.save(f'{saving_path}/{self.name}.npy', self.binary())
@@ -64,5 +68,7 @@ class Skeletonize:
     
         
 if __name__ == '__main__':
-    s2b = Skeletonize('D:/dataset/test/patches/label', 'label_ts_LI-2019-01-17-emb7-pos4_tp158-C1D4_D3')
-    s2b.show_mip()
+    s2b = Skeletonize('movie/test/LI_2019-02-05_emb5_pos2/pred', 'pred-0.7-semi-40_2019-02-05_emb5_pos2_tp62')
+    print(s2b.read_nodes())
+    # s2b.write_tif()
+    # s2b.show_mip()

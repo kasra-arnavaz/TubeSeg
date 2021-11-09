@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from typing import List, Tuple
 from utils.unpickle import read_pickle
 from graph.nx_graph import Cycle, Component, NxGraph
+from matplotlib import cm
 
 class Topo2Tif:
 
@@ -49,8 +50,14 @@ class Topo2Tif:
     
     def binary(self):
         binary = np.zeros(self.shape + (3,), dtype='uint8') # 3 for rgb channels
-        for i in self.all_edge_connections():
-            binary[self.skel_indices(i)] = np.random.randint(256, size=3)
+        colors = 255*np.array(cm.Set1.colors)
+        colors = colors.astype('uint8')
+        for num, i in enumerate(self.all_edge_connections()):
+            if num % 5 == 0: binary[self.skel_indices(i)] = [255, 255, 255]
+            else: binary[self.skel_indices(i)] = colors[num%9]
+
+            # binary[self.skel_indices(i)] = np.random.randint(256, size=3)
+
         return binary
 
     def write_tif(self):
@@ -72,6 +79,6 @@ class Topo2Tif:
 if __name__ == '__main__':
     t2t = Topo2Tif('movie/test/LI_2019-07-03_emb7_pos2/cyc/pred-0.7-semi-40_2019-07-03_emb7_pos2_tp38.cyc',
     'movie/test/LI_2019-07-03_emb7_pos2/pred/pred-0.7-semi-40_2019-07-03_emb7_pos2_tp38.tif', 'movie/test/LI_2019-07-03_emb7_pos2/cyc/bincyc_pred-0.7-semi-40_2019-07-03_emb7_pos2_tp38.tif')
-    t2t.write_tif()
+    # t2t.write_tif()
     t2t.show_mip()
     

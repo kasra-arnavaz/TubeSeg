@@ -175,8 +175,11 @@ class SemiSupervised:
                 x_transformed = tran.transform()
                 rec_patched, prob_patched = my_model.predict_generator(self.load_test_patches(x_transformed), steps=self.patches_per_img*x.shape[0])
                 prob = convert_patches_into_image(prob_patched.squeeze())
-                name_parser.category = f'prob-{self.name}-{epoch}'
-                TifWriter(f'{write_path}/prob', name_parser, prob).write()
+                #name_parser.category = f'prob-{self.name}-{epoch}'
+                #TifWriter(f'{write_path}/prob', name_parser, prob).write()
+                name_parser.category = f'pred-0.7-{self.name}-{epoch}'
+                pred = ((prob>= 0.7)*255).astype('uint8')
+                TifWriter(f'{write_path}/pred', name_parser, pred).write()
                 if make_rec:
                     rec = convert_patches_into_image(rec_patched.squeeze())
                     rec = (rec*3*tran.std) + tran.mean
@@ -187,7 +190,6 @@ class SemiSupervised:
 def main():
     import glob
     semi = SemiSupervised(name='semi', resume_epoch=40, final_epoch=40, loss_weights=[1, 10], transformer=ModifiedStandardization)
-    for path in glob.glob('movie/dev//silja/*'):
-        semi.test_model(f'{path}/mcherry', write_path = path)
+    for path in glob.glob('../results/*'):
+        semi.test_model(f'{path}/tif', write_path = path)
 
-main()

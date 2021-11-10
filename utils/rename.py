@@ -90,8 +90,24 @@ def rename_m2(path):
         # print(new_name)
         os.rename(f'{path}/{name}', f'{path}/{new_name}')
 
-path = 'D:/Skel/m2/ts/ts_preds_0.5'
+def remove_ignored_patches(path):
+    i = 0
+    for name in os.listdir(path):
+        if 'tp' in name.split('-')[-2]:
+            i +=1
+            ignored_patches = name.split('-')[-1].split('_')[0]
+            new_name = name.replace(f'-{ignored_patches}', '')
+            # print(name, new_name, i)
+            os.rename(f'{path}/{name}', f'{path}/{new_name}')
+
+def remove_LI(path):
+    for name in os.listdir(path):
+        new_name = name.replace('LI-', '')
+        print(name, new_name)
+        os.rename(f'{path}/{name}', f'{path}/{new_name}')
+
+path = 'D:/dataset/prev_next_patches_semi'
 # tif_rename(path)
 # skel_rename(path)
 # val_tp_rename(path)
-rename_m2(path)
+remove_LI(path)

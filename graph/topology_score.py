@@ -8,6 +8,7 @@ from graph.nx_graph import Component, Cycle, NxGraph
 from utils.unpickle import read_pickle
 from time_filtering.trackpy_filtering import TrackpyFiltering
 from time_filtering.seq_filtering import SequentialFiltering
+from time_filtering.seq_filtering_patch import SequentialFilteringPatches
 
 class TopologyScore(ABC):
 
@@ -210,7 +211,7 @@ class FilteredCmpScore(TopologyScore):
 
     @property
     def topology_type(self):
-        return 'cmpseq3'
+        return 'cmpseq5'
 
     def __init__(self, label_path, label_name, pred_path, pred_name, matching_radius=10, zero_thr=0.3, one_thr=0.7):
         super().__init__(label_path, label_name, pred_path, pred_name, matching_radius, zero_thr, one_thr)
@@ -232,7 +233,8 @@ class FilteredCmpScore(TopologyScore):
             nodes = []
             for node in pred_pos:
                 if self.is_in_patch(node): nodes.append(node)
-            if len(nodes) > 0: self.pred_pos[j] = np.array(nodes) 
+            if len(nodes) > 0:
+                self.pred_pos[j] = np.array(nodes)
         col, row = self.get_col_row()
         self.label_pos = {}
         for i, label_pos in self.label_topology._position.items():
@@ -242,9 +244,12 @@ class FilteredCmpScore(TopologyScore):
 
     def plot_filtered_pred_graph(self):
         G = nx.Graph()
-        nodes = []
+        nodes, position = [], {}
+        col, row = self.get_col_row()
         for node, pos in self.prediction_topology.nodes_xy_position.items():
-            if self.is_in_patch_2d(pos): nodes.append(node)
+            if self.is_in_patch_2d(pos):
+                nodes.append(node)
+                position[node] = np.array(pos) - np.array([col*256, row*256])
         # G.add_nodes_from(nodes)
         edges = []
         for i, j in self.prediction_topology.edge_list:
@@ -254,9 +259,9 @@ class FilteredCmpScore(TopologyScore):
         null.add_nodes_from([0,1,2,3])
         size = 256
         pos_null={0:[0,0], 1:[0,size], 2:[size,0], 3:[size,size]} 
-        plt.title(f'{self.label_name}_#C{len(self.label_pos)}', y=-0.1)
+        plt.title(f'{self.label_name}_#C{len(self.pred_pos)}', y=-0.1)
         nx.draw(null, pos_null, node_size=1e-10)
-        nx.draw(G, pos=self.prediction_topology.nodes_xy_position, 
+        nx.draw(G, pos=position, 
                 node_size=50, node_color='r', with_labels=False)
         plt.show()
         
@@ -347,18 +352,44 @@ def filtered_ts_cmp_score():
     cmp_scores = np.array(scores)
     print(f'cmp_score: {np.mean(cmp_scores):.3f}±{np.std(cmp_scores):.3f}')
 
+def filtered_ts_cmp_score_direct():
+    names = [name.replace('.cmp', '') for name in os.listdir('D:/dataset/test/patches/cmp') if name.endswith('.cmp')]
+    scores = []
+    for label_name in names:
+        if '2015' not in label_name and ('LI-2019-02-05-emb5-pos4_tp133-A4_B4' not in label_name):
+            pred_name = label_name.replace('label', 'pred-0.7-semi-40')
+            # ignored_patch = pred_name_part1.split('_')[-2].split('-')[-1]
+            # pred_name = pred_name_part1.replace(f'-{ignored_patch}', '')
+            cmp_score = FilteredCmpScore('D:/dataset/test/patches/cmp', label_name, 'D:/dataset/prev_next_patches_semi/current_frame', pred_name)
+            print(label_name, cmp_score.final_score())
+            scores.append(cmp_score.final_score())
+    scores.append(0.6666666666666666)
+    scores.append(0.8333333333333333)
+    scores.append(0.9553990610328638)
+    scores.append(0.875)
+    print(len(scores))
+    cmp_scores = np.array(scores)
+    print(f'cmp_score: {np.mean(cmp_scores):.3f}±{np.std(cmp_scores):.3f}')
+
 
 if __name__ == '__main__':
-    filtered_ts_cyc_score()
+    filtered_ts_cmp_score_direct()
     # mean_set_score('D:/dataset/test/patches', 'results/semi/2d/images/pred/ts/0.7/patches', 0.7, 'semi', 40)
     # mean_set_score('D:/dataset/test/patches', 'results/unetcldice/2d/ts/patches', 0.5, 'unetcldice', 200)
     # mean_set_score('D:/dataset/test/patches', 'results/unet/2d/images/pred/ts/0.9/patches', 0.9, 'unet', 200)
     # mean_set_score('D:/dataset/test/patches', 'results/ae/2d/seg/images/pred/ts/0.7/patches', 0.7, 'ae', 200)
 
-    # cmp_score = FilteredCmpScore('D:/dataset/test/patches/cmp', f'label_ts_LI-2018-11-20-emb7-pos4_tp71_A4',
-    #                                 'movie/test/LI_2018-11-20_emb7_pos4/cmp', f'pred-0.7-semi-40_2018-11-20_emb7_pos4_tp71').plot_filtered_pred_graph()
-    # cmp_score = PickledCmpScore('D:/dataset/test/patches/cmp', 'label_ts_LI-2018-11-20-emb7-pos4_tp10_A2',
-    #                             'movie/test/LI_2018-11-20_emb7_pos4/cmp', 'pred-0.7-semi-40_2018-11-20_emb7_pos4_tp10')
+    # cmp_score = FilteredCmpScore('D:/dataset/test/patches/cmp', f'label_ts_LI-2019-02-05-emb5-pos4_tp133-A4_C1',
+    #                                 'movie/test/LI_2019-02-05_emb5_pos4/cmp', f'pred-0.7-semi-40_2019-02-05_emb5_pos4_tp133')
+    # col, row = cmp_score.get_col_row()
+    # print(f'*********{len(cmp_score.pred_pos)}')
+    # for i, pos in cmp_score.pred_pos.items():
+    #     print((np.array(pos) - np.array([0, col*256, row*256])).mean(axis=0))
+    #                                 # .plot_filtered_pred_graph()
+    # cmp_score = PickledCmpScore('D:/dataset/test/patches/cmp', 'label_ts_LI-2019-02-05-emb5-pos4_tp133-A4_C1',
+    #                             'results/semi/2d/images/pred/ts/0.7/patches', 'pred-0.7-semi-40_ts_LI-2019-02-05-emb5-pos4_tp133-A4_C1')
+    # print(cmp_score.prediction_topology.center)
+    # print(cmp_score.label_topology.center)
     # cmp_score.write_normalized_iou()
     # cyc_score.write_normalized_iou()
     # print(cmp_score.final_score())

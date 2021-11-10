@@ -12,7 +12,7 @@ class NeighborPatch:
         self.write_path = write_path
     
     def current_frame_patches_nameparsers(self):
-        return [NameParser(name) for name in os.listdir(self.patch_path)]
+        return [NameParser(name) for name in os.listdir(self.patch_path) if '2015' not in name]
 
     def movie_names(self):
         return [nameparser.movie_name for nameparser in self.current_frame_patches_nameparsers()]
@@ -24,24 +24,28 @@ class NeighborPatch:
         return [nameparser.patch_id for nameparser in self.current_frame_patches_nameparsers()]
 
     def prev_next_frames(self):
-        tif_list, name_parsers = []
-        for movie_name, time_point in zip(self.movie_names, self.time_points):
-            no_LI_name = movie_name.replace('LI', '')
-            tif_list.append(f'{self.movie_path}/{movie_name}/pred/pred-0.7-semi-40{no_LI_name}_tp{time_point+1}.tif')
-            tif_list.append(f'{self.movie_path}/{movie_name}/pred/pred-0.7-semi-40{no_LI_name}_tp{time_point-1}.tif')
-            name_parsers.append(NameParser(f'pred-0.7-semi-40{no_LI_name}_tp{time_point+1}.tif'))
-            name_parsers.append(NameParser(f'pred-0.7-semi-40{no_LI_name}_tp{time_point-1}.tif'))
-
-        return tif_list, name_parsers, np.repeat(self.patch_ids, 2)
+        tif_list, name_parsers = [], []
+        for movie_name, time_point in zip(self.movie_names(), self.time_points()):
+            no_LI_name = movie_name.replace('LI-', '')
+            name_with_ = movie_name.replace('LI-', 'LI_').replace('-emb', '_emb').replace('-pos', '_pos')
+            name_parsers.append(NameParser(f'pred-0.7-semi-40_ts_{no_LI_name}_tp{time_point+1}_.tif'))
+            name_parsers.append(NameParser(f'pred-0.7-semi-40_ts_{no_LI_name}_tp{time_point-1}_.tif'))
+            tif_list.append(tif.imread(f"{self.movie_path}/{name_with_}/pred/pred-0.7-semi-40_{name_with_.replace('LI_', '')}_tp{time_point+1}.tif"))
+            tif_list.append(tif.imread(f"{self.movie_path}/{name_with_}/pred/pred-0.7-semi-40_{name_with_.replace('LI_', '')}_tp{time_point-1}.tif"))
+        return name_parsers, tif_list, np.repeat(self.patch_ids(), 2)
     
     def select_patches(self):
+        patch_name_parsers, patches = [], []
         for name_parser, image, patch_id in zip(*self.prev_next_frames()):
-            yield ImageOperations(name_parser, image).select_patch(patch_id)
-    
+            patch_name_parser, patch = ImageOperations(name_parser, image).select_patch(patch_id)
+            patch_name_parsers.append(patch_name_parser)
+            patches.append(patch)
+        return patch_name_parsers, patches
+
     def write_patches(self):
-        while True:
-            TifWriter(self.write_path, *self.select_patches()).write()
+        for patch_name_parser, patch in zip(*self.select_patches()):
+            TifWriter(self.write_path, patch_name_parser, patch).write()
 
 
 if __name__ == '__main__':
-    NeighborPatch('dataset/test/patches/cmp', 'movie/test', 'dataset/test/prev_next_patches_semi')
+    NeighborPatch('dataset/test/patches/cmp', 'movie/test', 'dataset/test/prev_next_patches_semi').write_patches()

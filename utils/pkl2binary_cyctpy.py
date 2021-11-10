@@ -67,7 +67,7 @@ class Topo2Tif:
             topology = self.topology(f'{self.topology_name}_tp{tp+1}.cyctpy')
             for edges, loop_id in zip(topology.topology_edges, topology.loop_id):
                     binary[tp][self.skel_indices(edges, topology)] = colors[loop_id%len(colors)]
-        tif.imwrite('qwer.tif', binary, imagej, metadata={'axes': 'TZYXC'})
+        tif.imwrite('qwer.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
 
 
     def write_npy(self, saving_path=None):

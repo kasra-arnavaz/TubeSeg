@@ -1,10 +1,10 @@
-from PyGEL3D import gel
+from pygel3d import graph, hmesh
 from sklearn.neighbors import NearestNeighbors
 from scipy import sparse
 import numpy as np
 import os
 import tifffile as tif
-
+from argparse import ArgumentParser
 
 class Skeleton:
 
@@ -21,7 +21,7 @@ class Skeleton:
             self.write_graph()
             self.skeletonize()
             self.scale_skeleton()
-            self.write_obj()
+            #self.write_obj()
             self.remove_graph()
 
     def skeleton_deos_not_exist(self):
@@ -49,11 +49,11 @@ class Skeleton:
                     print("c", e[0], e[1], file=f)
 
     def skeletonize(self):
-        g = gel.graph_load(f'{self.path}/{self.name}.graph')
-        gel.graph_edge_contract(g, 3)
-        s = gel.graph_LS_skeleton(g)
-        gel.graph_prune(s)
-        gel.graph_save(f'{self.path}/skel_{self.name}.graph', s)
+        g = graph.load(f'{self.path}/{self.name}.graph')
+        graph.edge_contract(g, 3)
+        s = graph.LS_skeleton(g)
+        graph.prune(s)
+        graph.save(f'{self.path}/skel_{self.name}.graph', s)
     
     def scale_skeleton(self):
         with open(f'{self.path}/skel_{self.name}.graph') as f:
@@ -65,15 +65,18 @@ class Skeleton:
                 else: print(line, file=f)
     
     def write_obj(self):
-        s = gel.graph_load(f'{self.path}/skel_{self.name}.graph')
-        m = gel.graph_to_mesh_cyl(s, fudge=0.5)
-        gel.obj_save(f'{self.path}/{self.name}.obj', m)
+        s = graph.load(f'{self.path}/skel_{self.name}.graph')
+        m = graph.to_mesh_cyl(s, fudge=0.5)
+        hmesh.obj_save(f'{self.path}/{self.name}.obj', m)
 
     def remove_graph(self):
         os.remove(f'{self.path}/{self.name}.graph')
 
 if __name__ == '__main__':
-    path = 'results/unetcldice/2d/ts/patches'
-    tifs = [tif.replace('.tif', '') for tif in os.listdir(path) if tif.endswith('.tif')]
+    parser = ArgumentParser()
+    parser.add_argument('--tifpath', type=str)
+    args = parser.parse_args()
+    #path = 'results/unetcldice/2d/ts/patches'
+    tifs = [tif.replace('.tif', '') for tif in os.listdir(args.tifpath) if tif.endswith('.tif')]
     for t in tifs:
-        Skeleton(path, t)
+        Skeleton(args.tifpath, t)

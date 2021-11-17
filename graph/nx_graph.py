@@ -3,13 +3,13 @@ import pandas as pd
 import networkx as nx
 import itertools
 from abc import ABC, abstractmethod, abstractproperty
-from graph.skeleton import Skeleton
+#from graph.skeleton import Skeleton
 import pickle
 from cached_property import cached_property
 import time
 import os
-
 from utils.unpickle import read_pickle
+from argparse import ArgumentParser
 
 class NxGraph:
 
@@ -164,8 +164,12 @@ class Cycle(Topology):
 
 
 if __name__ == '__main__':
-    path = 'results/semi/2d/images/pred/ts/0.7/patches'
-    names = [name.replace('.tif', '') for name in os.listdir(path) if name.endswith('.tif')]
+    parser = ArgumentParser()
+    parser.add_argument('--skelpath', type=str)
+    args = parser.parse_args()
+    #path = 'results/semi/2d/images/pred/ts/0.7/patches'
+    names = [name.replace('.tif', '') for name in os.listdir(args.skelpath) if name.endswith('.tif')]
     for name in names:
-        Component(path, name).write_pickle(f'{path}')
-        Cycle(path, name).write_pickle(f'{path}')
+        print(name)
+        Component(args.skelpath, name).write_pickle(f'{args.skelpath}/../cmp')
+        Cycle(args.skelpath, name).write_pickle(f'{args.skelpath}/../cyc')

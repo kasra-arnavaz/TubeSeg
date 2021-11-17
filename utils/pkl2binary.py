@@ -74,8 +74,6 @@ class Topo2Tif:
 
 
 
-
-    
 if __name__ == '__main__':
     t2t = Topo2Tif('movie/test/LI_2019-07-03_emb7_pos2/cyc/pred-0.7-semi-40_2019-07-03_emb7_pos2_tp38.cyc',
     'movie/test/LI_2019-07-03_emb7_pos2/pred/pred-0.7-semi-40_2019-07-03_emb7_pos2_tp38.tif', 'movie/test/LI_2019-07-03_emb7_pos2/cyc/bincyc_pred-0.7-semi-40_2019-07-03_emb7_pos2_tp38.tif')

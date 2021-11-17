@@ -5,21 +5,21 @@ from matplotlib import cm
 import os
 from typing import List, Tuple
 
-from tifffile.tifffile import imagej_shape
 from utils.unpickle import read_pickle
 from graph.nx_graph import Cycle, Component, NxGraph
 from time_filtering.trackpy_filtering import TrackpyFiltering
 
 class Topo2Tif:
 
-    def __init__(self, topology_path, topology_name, pred_file):
-        self.topology_path = topology_path
-        self.topology_name = topology_name
+    def __init__(self, cyc_path, pred_file, cyctpy_path=None):
+        if cyctpy_path is None: cyctpy_path = cyc_path
+        self.cyc_path = cyc_path
+        self.cyctpy_path = cyctpy_path
         self.pred_file = pred_file
-        self.names = [name for name in os.listdir(self.topology_path) if name.endswith('.cyctpy')]
+        self.names = [name.replace('.cyctpy', '') for name in os.listdir(self.cyctpy_path) if name.endswith('.cyctpy')]
 
-    def topology(self, name):
-        return read_pickle(f'{self.topology_path}/{name}')
+    def topology(self, path, name, extension):
+        return read_pickle(f'{path}/{name}.{extension}')
     
     @property
     def shape(self):
@@ -52,9 +52,6 @@ class Topo2Tif:
     
     def write_tif(self):
         num_frames = len(self.names)
-        
-        colors = 255*np.array(cm.Set1.colors)
-        colors = colors.astype('uint8')
         # with tif.TiffWriter('temp.tif') as tiff:
         #     for tp in range(5):
         #         binary = np.zeros(self.shape + (3,), dtype='uint8') # 3 for rgb channels
@@ -62,12 +59,20 @@ class Topo2Tif:
         #         for edges, loop_id in zip(topology.topology_edges, topology.loop_id):
         #             binary[self.skel_indices(edges, topology)] = colors[loop_id%len(colors)]
         #         tiff.save(binary, contiguous=True)
-        binary = np.zeros((5,)+self.shape+(3,), dtype='uint8')
-        for tp in range(5):
-            topology = self.topology(f'{self.topology_name}_tp{tp+1}.cyctpy')
-            for edges, loop_id in zip(topology.topology_edges, topology.loop_id):
-                    binary[tp][self.skel_indices(edges, topology)] = colors[loop_id%len(colors)]
-        tif.imwrite('qwer.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
+        binary = np.zeros((num_frames,)+self.shape+(3,), dtype='uint8')
+        for tp, name in enumerate(self.names):
+            print(name)
+            cyc = self.topology(self.cyc_path, name, 'cyc')
+            cyctpy = self.topology(self.cyctpy_path, name, 'cyctpy')
+            i = 0
+            for cyc_edges in cyc.topology_edges:
+                if not cyc_edges in cyctpy.topology_edges: #filtered
+                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [np.random.randint(256), 0, 0]
+                else:
+                    np.random.seed(cyctpy.loop_id[i])
+                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [0, np.random.randint(256), np.random.randint(256)]
+                    i += 1
+        tif.imwrite('mock.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
 
 
     def write_npy(self, saving_path=None):
@@ -82,10 +87,8 @@ class Topo2Tif:
 
 
 
-    
 if __name__ == '__main__':
-    t2t = Topo2Tif('movie/test/LI_2019-07-03_emb7_pos2/cyc/srch=15, mem=1, thr=15, step=0.9, stop=5', 'pred-0.7-semi-40_2019-07-03_emb7_pos2',
-    'movie/test/LI_2019-07-03_emb7_pos2/pred/pred-0.7-semi-40_2019-07-03_emb7_pos2_tp38.tif')
+    t2t = Topo2Tif('mock_movie', 'movie/test/LI_2018-11-20_emb7_pos4/pred/pred-0.7-semi-40_2018-11-20_emb7_pos4_tp38.tif')
     t2t.write_tif()
+
     # t2t.show_mip()
-    

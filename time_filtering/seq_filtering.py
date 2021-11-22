@@ -4,6 +4,7 @@ from scipy.spatial.distance import cdist
 import pickle
 import networkx as nx
 from cached_property import cached_property
+from argparse import ArgumentParser
 import os
 
 from graph.nx_graph import Topology, Component, Cycle, NxGraph
@@ -12,16 +13,15 @@ from utils.unpickle import read_pickle
 
 class SequentialFiltering:
 
-    def __init__(self, path, name, extension, tp_max ,threshold):
+    def __init__(self, path, name, threshold):
         self.path = path
         self.name = name
-        self.extension = extension
-        self.tp_max = tp_max
         self.threshold = threshold
+        self.tp_max = len([file for file in os.listdir(path) if file.endswith('cmp')])
 
     @cached_property
     def all_topology(self):
-        return [read_pickle(f'{self.path}/{self.name}_tp{i+1}.{self.extension}') for i in range(self.tp_max)]
+        return [read_pickle(f'{self.path}/{self.name}_tp{i+1}.cmp') for i in range(self.tp_max)]
         
     @staticmethod
     def min_pointclould_distance(pointcloud1, pointcloud2):
@@ -50,13 +50,18 @@ class SequentialFiltering:
                     keep_idx.append(i)
         return list(set(keep_idx))
 
-    def save_filtered(self):
+    def save_filtered(self, save_to):
         for tp in range(self.tp_max):
-            self.write_pickle(tp)
+            self.write_pickle(tp, save_to)
         
-    def write_pickle(self, tp):
-        with open(f'{self.path}/{self.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
-            pickle.dump(self.set_all_properties(tp), f)
+    def write_pickle(self, tp, save_to):
+        if f'{self.name}_tp{tp+1}.{self.topo_type}' not in os.listdir(save_to):
+            with open(f'{save_to}/{self.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
+                pickle.dump(self.set_all_properties(tp), f)
+        elif os.path.getsize(f'{self.name}_tp{tp+1}.{self.topo_type}') < 100:
+            with open(f'{save_to}/{self.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
+                pickle.dump(self.set_all_properties(tp), f)
+
     
     def set_all_properties(self, tp):
         topo = self.all_topology[tp]
@@ -73,15 +78,13 @@ class SequentialFiltering:
 
     @property
     def topo_type(self):
-        return f'{self.extension}seq{self.threshold}'
+        return f'cmpseq{self.threshold}'
 
 
 
 if __name__ == '__main__':
-    path = 'movie/test'
-    for name in os.listdir(path):
-        print(name)
-        tp_max = len(os.listdir(f'{path}/{name}/pred'))
-        SequentialFiltering(f'{path}/{name}/cmp', f"pred-0.7-semi-40_{name.replace('LI_', '')}", 'cmp', tp_max=tp_max, threshold=5).save_filtered()
-        # SequentialFiltering(f'{path}/{name}/cyc', f'pred0.7_{name}', 'cyc', tp_max=tp_max, threshold=3).save_filtered()
-
+    parser = ArgumentParser()
+    parser.add_argument('--cmppath', type=str)
+    args = parser.parse_args()
+    movie_name = args.cmppath.split('/')[-2]
+    SequentialFiltering(args.cmppath, f"pred-0.7-semi-40_{movie_name.replace('LI_', '')}", threshold=3).save_filtered(args.cmppath)

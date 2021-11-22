@@ -123,6 +123,9 @@ class Topology(ABC):
         if f'{self.name}.{self.topo_type}' not in os.listdir(write_path):
             with open(f'{write_path}/{self.name}.{self.topo_type}', 'wb') as f:
                 pickle.dump(self.set_all_properties(), f)
+        elif os.path.getsize(f'{write_path}/{self.name}.{self.topo_type}') < 100:
+            with open(f'{write_path}/{self.name}.{self.topo_type}', 'wb') as f:
+                pickle.dump(self.set_all_properties(), f)
 
 
 

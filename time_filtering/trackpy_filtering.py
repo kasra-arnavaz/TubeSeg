@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 import networkx as nx
 from cached_property import cached_property
+from argparse import ArgumentParser
 import os
 
 from tracking.trackpy import Tracking
@@ -14,8 +15,8 @@ class TrackpyFiltering:
     def __init__(self, data, track):
         self.data = data
         self.track = track
-        self.sub_folder = f'srch={self.track.search_range}, mem={self.track.memory}, thr={self.track.thr}, step={self.track.step}, stop={self.track.stop}'
-        os.makedirs(f'{self.data.path}/{self.sub_folder}', exist_ok=True)
+        # self.sub_folder = f'srch={self.track.search_range}, mem={self.track.memory}, thr={self.track.thr}, step={self.track.step}, stop={self.track.stop}'
+        # os.makedirs(f'{self.data.path}/{self.sub_folder}', exist_ok=True)
 
     @cached_property
     def filtered_tracks(self):
@@ -44,13 +45,16 @@ class TrackpyFiltering:
             loop_id[t+1] = filtered_tracks[filtered_tracks['frame'] == t+1].iloc[:, 4].to_list()
         return loop_id
 
-    def save_filtered(self):
+    def save_filtered(self, save_to):
         for tp in range(self.data.tp_max):
-            self.write_pickle(tp)
+            self.write_pickle(tp, save_to)
         
-    def write_pickle(self, tp):
-        if f'{self.data.name}_tp{tp+1}.{self.topo_type}' not in os.listdir(f'{self.data.path}/{self.sub_folder}'):
-            with open(f'{self.data.path}/{self.sub_folder}/{self.data.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
+    def write_pickle(self, tp, save_to):
+        if f'{self.data.name}_tp{tp+1}.{self.topo_type}' not in os.listdir(save_to):
+            with open(f'{save_to}/{self.data.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
+                pickle.dump(self.set_all_properties(tp), f)
+        elif os.path.getsize(f'{self.data.name}_tp{tp+1}.{self.topo_type}') < 100:
+            with open(f'{save_to}/{self.data.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
                 pickle.dump(self.set_all_properties(tp), f)
     
     def set_all_properties(self, tp):
@@ -70,18 +74,15 @@ class TrackpyFiltering:
 
     @property
     def topo_type(self):
-        return f'cyctpy'
+        return f'cyctpy{self.track.thr}'
 
 
 if __name__ == '__main__':
-    path = 'movie/test'
-    for name in os.listdir(path):
-        name = 'LI_2018-11-20_emb7_pos4'
-    # for name in ['LI_2019-02-05_emb5_pos4', 'LI_2018-11-20_emb7_pos4', 'LI_2018-11-20_emb6_pos1']:
-        print(name)
-        tp_max = len([file for file in os.listdir(f'{path}/{name}/cyc') if file.endswith('.cyc')])
-        data = Prediction(f'{path}/{name}/cyc', f"pred-0.7-semi-40_{name.replace('LI_', '')}", tp_max)
-        track = Tracking(data, search_range=15, memory=1, thr=10, step=0.9, stop=5)
-        TrackpyFiltering(data, track).save_filtered()
-        TrackpyFiltering(data, track).write_centers_as_csv()
-        break
+    parser = ArgumentParser()
+    parser.add_argument('--cycpath', type=str)
+    args = parser.parse_args()
+    movie_name = args.cycpath.split('/')[-2]
+    data = Prediction(args.cycpath, f"pred-0.7-semi-40_{movie_name.replace('LI_', '')}",)
+    track = Tracking(data, search_range=15, memory=1, thr=15, step=0.9, stop=5)
+    TrackpyFiltering(data, track).save_filtered(args.cycpath)
+    # TrackpyFiltering(data, track).write_centers_as_csv()

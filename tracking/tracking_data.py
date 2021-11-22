@@ -5,7 +5,7 @@ import numpy as np
 from cached_property import cached_property
 from graph.nx_graph import Cycle, Component, NxGraph
 from utils.unpickle import read_pickle
-
+import os
 
 class TrackingData(ABC):
 
@@ -29,16 +29,17 @@ class Silja(TrackingData):
     def __init__(self, path, name):
         self.path = path
         self.name = name
+        
 
     def get_data(self):
         return pd.read_csv(f'{self.path}/{self.name}.csv')
 
 class Prediction(TrackingData):
 
-    def __init__(self, path, name, tp_max):
+    def __init__(self, path, name):
         self.path = path
         self.name = name
-        self.tp_max = tp_max
+        self.tp_max = len([file for file in os.listdir(self.path) if file.endswith('.cyc')])
 
     @cached_property
     def all_cycles(self):

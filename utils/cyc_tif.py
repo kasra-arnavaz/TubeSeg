@@ -49,7 +49,7 @@ class Topo2Tif:
             x_list.append(x)
         return tuple(z_list), tuple(y_list), tuple(x_list)
     
-    def write_tif(self):
+    def write_tif(self, saved_name, save_mip=True):
         # with tif.TiffWriter('temp.tif') as tiff:
         #     for tp in range(5):
         #         binary = np.zeros(self.shape + (3,), dtype='uint8') # 3 for rgb channels
@@ -65,28 +65,20 @@ class Topo2Tif:
             i = 0
             for cyc_edges in cyc.topology_edges:
                 if not cyc_edges in cyctpy.topology_edges: #filtered
-                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [np.random.randint(256), 0, 0]
+                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [np.random.randint(50,256), 0, 0]
                 else:
                     np.random.seed(cyctpy.loop_id[i])
-                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [0, np.random.randint(256), np.random.randint(256)]
+                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
                     i += 1
-        tif.imwrite('mock.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
-
-
-    def write_npy(self, saving_path=None):
-        if saving_path is None: saving_path = self.path
-        np.save(f'{saving_path}/{self.name}.npy', self.binary())
-    
-    def show_mip(self):
-        mip = np.amax(self.binary(), axis=0)
-        plt.imshow(mip)
-        plt.show()
+        tif.imwrite(f'{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
+        if save_mip:
+            tif.imwrite(f'{saved_name}_mip.tif', np.amax(binary, axis=1))
 
 
 
 
 if __name__ == '__main__':
     t2t = Topo2Tif('mock_movie', 'pred-0.7-semi-40_2018-11-20_emb7_pos4', '../results/test-old/LI_2018-11-20_emb7_pos4/pred/pred-0.7-semi-40_2018-11-20_emb7_pos4_tp38.tif')
-    t2t.write_tif()
+    t2t.write_tif('mock')
 
     # t2t.show_mip()

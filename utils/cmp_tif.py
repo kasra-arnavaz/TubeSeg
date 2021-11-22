@@ -8,6 +8,7 @@ from typing import List, Tuple
 from utils.unpickle import read_pickle
 from graph.nx_graph import Cycle, Component, NxGraph
 from time_filtering.trackpy_filtering import TrackpyFiltering
+from time_filtering.seq_filtering import SequentialFiltering
 
 class Topo2Tif:
 
@@ -49,7 +50,7 @@ class Topo2Tif:
             x_list.append(x)
         return tuple(z_list), tuple(y_list), tuple(x_list)
     
-    def write_tif(self):
+    def write_tif(self, saved_name, save_mip=True):
 
         binary = np.zeros((self.num_frames,)+self.shape+(3,), dtype='uint8')
         for tp, name in enumerate(self.names):
@@ -59,12 +60,13 @@ class Topo2Tif:
             i = 0
             for cmp_edges in cmp.topology_edges:
                 if not cmp_edges in cmpseq.topology_edges: #filtered
-                    binary[tp][self.skel_indices(cmp_edges, cmp)] = [np.random.randint(256), 0, 0]
+                    binary[tp][self.skel_indices(cmp_edges, cmp)] = [np.random.randint(50,256), 0, 0]
                 else:
-                    binary[tp][self.skel_indices(cmp_edges, cmp)] = [0, np.random.randint(256), np.random.randint(256)]
+                    binary[tp][self.skel_indices(cmp_edges, cmp)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
                     i += 1
-        tif.imwrite('mock_cmp.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
-
+        tif.imwrite(f'{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
+        if save_mip:
+            tif.imwrite(f'{saved_name}_mip.tif', np.amax(binary, axis=1))
 
     def write_npy(self, saving_path=None):
         if saving_path is None: saving_path = self.path
@@ -80,6 +82,6 @@ class Topo2Tif:
 
 if __name__ == '__main__':
     t2t = Topo2Tif('mock_movie', 'pred-0.7-semi-40_2018-11-20_emb7_pos4', '../results/test-old/LI_2018-11-20_emb7_pos4/pred/pred-0.7-semi-40_2018-11-20_emb7_pos4_tp38.tif')
-    t2t.write_tif()
+    t2t.write_tif('mock_cmp')
 
     # t2t.show_mip()

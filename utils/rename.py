@@ -100,14 +100,16 @@ def remove_ignored_patches(path):
             # print(name, new_name, i)
             os.rename(f'{path}/{name}', f'{path}/{new_name}')
 
-def remove_LI(path):
-    for name in os.listdir(path):
-        new_name = name.replace('LI-', '')
-        print(name, new_name)
-        os.rename(f'{path}/{name}', f'{path}/{new_name}')
+def remove_LI_(path):
+   
+    for folder in ['pred', 'cyc', 'cmp']:
+        for name in os.listdir(f'{path}/{folder}'):
+            new_name = name.replace('LI_', '')
+            #print(name, new_name)
+            os.rename(f'{path}/{folder}/{name}', f'{path}/{folder}/{new_name}')
 
-path = 'D:/dataset/prev_next_patches_semi'
+path = '../results/val/LI_2019-11-08_emb3_pos2'
 # tif_rename(path)
 # skel_rename(path)
 # val_tp_rename(path)
-remove_LI(path)
+remove_LI_(path)

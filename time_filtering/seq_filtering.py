@@ -58,7 +58,7 @@ class SequentialFiltering:
         if f'{self.name}_tp{tp+1}.{self.topo_type}' not in os.listdir(save_to):
             with open(f'{save_to}/{self.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
                 pickle.dump(self.set_all_properties(tp), f)
-        elif os.path.getsize(f'{self.name}_tp{tp+1}.{self.topo_type}') < 100:
+        elif os.path.getsize(f'{self.name}_tp{tp+1}.{self.topo_type}') < 5000:
             with open(f'{save_to}/{self.name}_tp{tp+1}.{self.topo_type}', 'wb') as f:
                 pickle.dump(self.set_all_properties(tp), f)
 

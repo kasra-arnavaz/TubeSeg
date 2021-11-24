@@ -1,30 +1,32 @@
 import numpy as np
+from numpy.lib.npyio import save
 import tifffile as tif
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import os
 from typing import List, Tuple
+from argparse import ArgumentParser
 
 from utils.unpickle import read_pickle
-from graph.nx_graph import Cycle, Component, NxGraph
+from graph.nx_graph import Cycle, Component, NxGraph    
 from time_filtering.trackpy_filtering import TrackpyFiltering
 from time_filtering.seq_filtering import SequentialFiltering
 
 class Topo2Tif:
 
-    def __init__(self, cmp_path, cmp_name, pred_file):
+    def __init__(self, cmp_path, pred_prefix):
         self.cmp_path = cmp_path
-        self.pred_file = pred_file
+        self.pred_prefix = pred_prefix
         self.num_frames = len([name for name in os.listdir(self.cmp_path) if name.endswith('.cmp')])
         #self.num_frames = 3
-        self.names = [f'{cmp_name}_tp{i+1}' for i in range(self.num_frames)]
+        self.movie_name = cmp_path.split('/')[-2].replace('LI_', '')
+        self.names = [f'{pred_prefix}_{self.movie_name}_tp{i+1}' for i in range(self.num_frames)]
 
     def topology(self, name, extension):
         return read_pickle(f'{self.cmp_path}/{name}.{extension}')
     
     @property
     def shape(self):
-        return tif.imread(self.pred_file).shape
+        return tif.imread(f'{self.cmp_path}/../pred/{self.names[0]}').shape
 
     def nodes_position(self, topology):
         list_node_pos = [v for v_list in topology.position.values() for v in v_list]
@@ -50,38 +52,26 @@ class Topo2Tif:
             x_list.append(x)
         return tuple(z_list), tuple(y_list), tuple(x_list)
     
-    def write_tif(self, saved_name, save_mip=True):
-
+    def write_tif(self, filtered_cmp_ext, save_mip=True):
+        saved_name = f'{filtered_cmp_ext}-{pred_prefix}_{self.movie_name}'
         binary = np.zeros((self.num_frames,)+self.shape+(3,), dtype='uint8')
         for tp, name in enumerate(self.names):
             print(name)
             cmp = self.topology(name, 'cmp')
-            cmpseq = self.topology(name, 'cmpseq5')
-            i = 0
+            cmpseq = self.topology(name, filtered_cmp_ext)
             for cmp_edges in cmp.topology_edges:
                 if not cmp_edges in cmpseq.topology_edges: #filtered
                     binary[tp][self.skel_indices(cmp_edges, cmp)] = [np.random.randint(50,256), 0, 0]
                 else:
                     binary[tp][self.skel_indices(cmp_edges, cmp)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
-                    i += 1
         tif.imwrite(f'{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
         if save_mip:
             tif.imwrite(f'{saved_name}_mip.tif', np.amax(binary, axis=1))
 
-    def write_npy(self, saving_path=None):
-        if saving_path is None: saving_path = self.path
-        np.save(f'{saving_path}/{self.name}.npy', self.binary())
-    
-    def show_mip(self):
-        mip = np.amax(self.binary(), axis=0)
-        plt.imshow(mip)
-        plt.show()
-
-
-
 
 if __name__ == '__main__':
-    t2t = Topo2Tif('mock_movie', 'pred-0.7-semi-40_2018-11-20_emb7_pos4', '../results/test-old/LI_2018-11-20_emb7_pos4/pred/pred-0.7-semi-40_2018-11-20_emb7_pos4_tp38.tif')
-    t2t.write_tif('mock_cmp')
-
-    # t2t.show_mip()
+    parser = ArgumentParser()
+    parser.add_argument('--cmppath', type=str)
+    args = parser.parse_args()
+    pred_prefix = 'pred-0.7-semi-40'
+    Topo2Tif(args.cmppath, pred_prefix).write_tif(filtered_cmp_ext='cmpseq3', save_mip=False)

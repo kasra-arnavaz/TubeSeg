@@ -7,6 +7,7 @@
 *.csv
 *.mat
 *.out
+*.err
 *.sh
 *.html
 *.graph

@@ -17,7 +17,6 @@ class Topo2Tif:
         self.cmp_path = cmp_path
         self.pred_prefix = pred_prefix
         self.num_frames = len([name for name in os.listdir(self.cmp_path) if name.endswith('.cmp')])
-        #self.num_frames = 3
         self.movie_name = cmp_path.split('/')[-2].replace('LI_', '')
         self.names = [f'{pred_prefix}_{self.movie_name}_tp{i+1}' for i in range(self.num_frames)]
 
@@ -26,7 +25,7 @@ class Topo2Tif:
     
     @property
     def shape(self):
-        return tif.imread(f'{self.cmp_path}/../pred/{self.names[0]}').shape
+        return tif.imread(f'{self.cmp_path}/../pred/{self.names[0]}.tif').shape
 
     def nodes_position(self, topology):
         list_node_pos = [v for v_list in topology.position.values() for v in v_list]
@@ -64,9 +63,9 @@ class Topo2Tif:
                     binary[tp][self.skel_indices(cmp_edges, cmp)] = [np.random.randint(50,256), 0, 0]
                 else:
                     binary[tp][self.skel_indices(cmp_edges, cmp)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
-        tif.imwrite(f'{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
+        tif.imwrite(f'{self.cmp_path}/../{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
         if save_mip:
-            tif.imwrite(f'{saved_name}_mip.tif', np.amax(binary, axis=1))
+            tif.imwrite(f'{self.cmp_path}/../mip{saved_name}.tif', np.amax(binary, axis=1))
 
 
 if __name__ == '__main__':

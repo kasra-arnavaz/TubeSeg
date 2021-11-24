@@ -52,7 +52,7 @@ class Topo2Tif:
         return tuple(z_list), tuple(y_list), tuple(x_list)
     
     def write_tif(self, filtered_cmp_ext, save_mip=True):
-        saved_name = f'{filtered_cmp_ext}-{pred_prefix}_{self.movie_name}'
+        saved_name = f'{filtered_cmp_ext}-{self.pred_prefix}_{self.movie_name}'
         binary = np.zeros((self.num_frames,)+self.shape+(3,), dtype='uint8')
         for tp, name in enumerate(self.names):
             print(name)

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import os
 from typing import List, Tuple
+from argparse import ArgumentParser
 
 from utils.unpickle import read_pickle
 from graph.nx_graph import Cycle, Component, NxGraph
@@ -11,19 +12,19 @@ from time_filtering.trackpy_filtering import TrackpyFiltering
 
 class Topo2Tif:
 
-    def __init__(self, cyc_path, cyc_name, pred_file):
+    def __init__(self, cyc_path, pred_prefix):
         self.cyc_path = cyc_path
-        self.pred_file = pred_file
+        self.pred_prefix = pred_prefix
         self.num_frames = len([name for name in os.listdir(self.cyc_path) if name.endswith('.cyc')])
-        #self.num_frames = 3
-        self.names = [f'{cyc_name}_tp{i+1}' for i in range(self.num_frames)]
+        self.movie_name = cyc_path.split('/')[-2].replace('LI_', '')
+        self.names = [f'{pred_prefix}_{self.movie_name}_tp{i+1}' for i in range(self.num_frames)]
 
     def topology(self, name, extension):
         return read_pickle(f'{self.cyc_path}/{name}.{extension}')
     
     @property
     def shape(self):
-        return tif.imread(self.pred_file).shape
+        return tif.imread(f'{self.cyc_path}/../pred/{self.names[0]}.tif').shape
 
     def nodes_position(self, topology):
         list_node_pos = [v for v_list in topology.position.values() for v in v_list]
@@ -49,7 +50,7 @@ class Topo2Tif:
             x_list.append(x)
         return tuple(z_list), tuple(y_list), tuple(x_list)
     
-    def write_tif(self, saved_name, save_mip=True):
+    def write_tif(self, filtered_cyc_ext, save_mip=True):
         # with tif.TiffWriter('temp.tif') as tiff:
         #     for tp in range(5):
         #         binary = np.zeros(self.shape + (3,), dtype='uint8') # 3 for rgb channels
@@ -57,11 +58,12 @@ class Topo2Tif:
         #         for edges, loop_id in zip(topology.topology_edges, topology.loop_id):
         #             binary[self.skel_indices(edges, topology)] = colors[loop_id%len(colors)]
         #         tiff.save(binary, contiguous=True)
+        saved_name = f'{filtered_cyc_ext}-{self.pred_prefix}_{self.movie_name}'
         binary = np.zeros((self.num_frames,)+self.shape+(3,), dtype='uint8')
         for tp, name in enumerate(self.names):
             print(name)
             cyc = self.topology(name, 'cyc')
-            cyctpy = self.topology(name, 'cyctpy')
+            cyctpy = self.topology(name, filtered_cyc_ext)
             i = 0
             for cyc_edges in cyc.topology_edges:
                 if not cyc_edges in cyctpy.topology_edges: #filtered
@@ -70,28 +72,14 @@ class Topo2Tif:
                     np.random.seed(cyctpy.loop_id[i])
                     binary[tp][self.skel_indices(cyc_edges, cyc)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
                     i += 1
-        tif.imwrite(f'{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
+        tif.imwrite(f'{self.cyc_path}/../{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
         if save_mip:
-            tif.imwrite(f'{saved_name}_mip.tif', np.amax(binary, axis=1))
-<<<<<<< HEAD
-=======
-
-
-    def write_npy(self, saving_path=None):
-        if saving_path is None: saving_path = self.path
-        np.save(f'{saving_path}/{self.name}.npy', self.binary())
-    
-    def show_mip(self):
-        mip = np.amax(self.binary(), axis=0)
-        plt.imshow(mip)
-        plt.show()
->>>>>>> f48f917c27540ebe0a5cf9cfbb6f6346fa9ba3a7
-
-
+            tif.imwrite(f'{self.cyc_path}/../mip{saved_name}.tif', np.amax(binary, axis=1))
 
 
 if __name__ == '__main__':
-    t2t = Topo2Tif('mock_movie', 'pred-0.7-semi-40_2018-11-20_emb7_pos4', '../results/test-old/LI_2018-11-20_emb7_pos4/pred/pred-0.7-semi-40_2018-11-20_emb7_pos4_tp38.tif')
-    t2t.write_tif('mock')
-
-    # t2t.show_mip()
+    parser = ArgumentParser()
+    parser.add_argument('--cycpath', type=str)
+    args = parser.parse_args()
+    pred_prefix = 'pred-0.7-semi-40'
+    Topo2Tif(args.cycpath, pred_prefix).write_tif(filtered_cyc_ext='cyctpy15', save_mip=False)

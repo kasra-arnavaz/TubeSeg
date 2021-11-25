@@ -173,5 +173,5 @@ if __name__ == '__main__':
     names = [name.replace('.graph', '').replace('skel_', '') for name in os.listdir(args.skelpath) if name.endswith('.graph')]
     for name in names:
         print(name)
-        # Component(args.skelpath, name).write_pickle(f'{args.skelpath}/../cmp')
+        Component(args.skelpath, name).write_pickle(f'{args.skelpath}/../cmp')
         Cycle(args.skelpath, name).write_pickle(f'{args.skelpath}/../cyc')

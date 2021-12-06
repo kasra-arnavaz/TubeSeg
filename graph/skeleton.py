@@ -16,7 +16,7 @@ class Skeleton:
 
 
     def run(self):
-        if self.skeleton_deos_not_exist() or self.make_new:
+        if self.skeleton_deos_not_exist() or self.make_new or os.path.getsize(f'{self.path}/skel_{self.name}.graph') < 5000:
             print(f'Making new skeleton for {self.name}')
             self.write_graph()
             self.skeletonize()

@@ -60,21 +60,22 @@ class Topo2Tif:
         #         tiff.save(binary, contiguous=True)
         saved_name = f'{filtered_cyc_ext}-{self.pred_prefix}_{self.movie_name}'
         binary = np.zeros((self.num_frames,)+self.shape+(3,), dtype='uint8')
-        for tp, name in enumerate(self.names):
-            print(name)
-            cyc = self.topology(name, 'cyc')
-            cyctpy = self.topology(name, filtered_cyc_ext)
-            i = 0
-            for cyc_edges in cyc.topology_edges:
-                if not cyc_edges in cyctpy.topology_edges: #filtered
-                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [np.random.randint(50,256), 0, 0]
-                else:
-                    np.random.seed(cyctpy.loop_id[i])
-                    binary[tp][self.skel_indices(cyc_edges, cyc)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
-                    i += 1
-        tif.imwrite(f'{self.cyc_path}/../{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
-        if save_mip:
-            tif.imwrite(f'{self.cyc_path}/../mip{saved_name}.tif', np.amax(binary, axis=1))
+        if f'{saved_name}.tif' not in os.listdir(f'{self.cyc_path}/..'):
+           print(saved_name)
+           for tp, name in enumerate(self.names):
+               cyc = self.topology(name, 'cyc')
+               cyctpy = self.topology(name, filtered_cyc_ext)
+               i = 0
+               for cyc_edges in cyc.topology_edges:
+                   if not cyc_edges in cyctpy.topology_edges: #filtered
+                      binary[tp][self.skel_indices(cyc_edges, cyc)] = [np.random.randint(50,256), 0, 0]
+                   else:
+                       np.random.seed(cyctpy.loop_id[i])
+                       binary[tp][self.skel_indices(cyc_edges, cyc)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
+                       i += 1
+           tif.imwrite(f'{self.cyc_path}/../{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
+           if save_mip:
+               tif.imwrite(f'{self.cyc_path}/../mip{saved_name}.tif', np.amax(binary, axis=1))
 
 
 if __name__ == '__main__':

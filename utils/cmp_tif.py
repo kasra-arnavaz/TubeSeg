@@ -54,18 +54,18 @@ class Topo2Tif:
     def write_tif(self, filtered_cmp_ext, save_mip=True):
         saved_name = f'{filtered_cmp_ext}-{self.pred_prefix}_{self.movie_name}'
         binary = np.zeros((self.num_frames,)+self.shape+(3,), dtype='uint8')
-        for tp, name in enumerate(self.names):
-            print(name)
-            cmp = self.topology(name, 'cmp')
-            cmpseq = self.topology(name, filtered_cmp_ext)
-            for cmp_edges in cmp.topology_edges:
-                if not cmp_edges in cmpseq.topology_edges: #filtered
-                    binary[tp][self.skel_indices(cmp_edges, cmp)] = [np.random.randint(50,256), 0, 0]
-                else:
-                    binary[tp][self.skel_indices(cmp_edges, cmp)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
-        tif.imwrite(f'{self.cmp_path}/../{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
-        if save_mip:
-            tif.imwrite(f'{self.cmp_path}/../mip{saved_name}.tif', np.amax(binary, axis=1))
+        if f'{saved_name}.tif' not in os.listdir(f'{self.cmp_path}/..'):
+           for tp, name in enumerate(self.names):
+               cmp = self.topology(name, 'cmp')
+               cmpseq = self.topology(name, filtered_cmp_ext)
+               for cmp_edges in cmp.topology_edges:
+                   if not cmp_edges in cmpseq.topology_edges: #filtered
+                       binary[tp][self.skel_indices(cmp_edges, cmp)] = [np.random.randint(50,256), 0, 0]
+                   else:
+                       binary[tp][self.skel_indices(cmp_edges, cmp)] = [0, np.random.randint(50,256), np.random.randint(50,256)]
+           tif.imwrite(f'{self.cmp_path}/../{saved_name}.tif', binary, imagej=True, metadata={'axes': 'TZYXC'})
+           if save_mip:
+               tif.imwrite(f'{self.cmp_path}/../mip{saved_name}.tif', np.amax(binary, axis=1))
 
 
 if __name__ == '__main__':

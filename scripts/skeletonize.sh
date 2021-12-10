@@ -1,0 +1,1 @@
+python3 -m skeletonization.skeleton --seg_path ./save_dir/LI_2019-02-05_emb5_pos3/pred

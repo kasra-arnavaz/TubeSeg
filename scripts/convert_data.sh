@@ -1,0 +1,1 @@
+python3 -m conversion.raw2tif --raw_file ../raw_data/LI_2019-02-05_emb5_pos3.lsm --write_path ./save_dir --make_duct

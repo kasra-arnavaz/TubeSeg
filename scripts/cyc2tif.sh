@@ -1,0 +1,1 @@
+python3 -m topology.as_tif.cyc_tif --cyc_path ./save_dir/LI_2019-02-05_emb5_pos3/cyc --cyc_name pred-0.7-semi-40_LI_2019-02-05_emb5_pos3 --cyc_filtered_ext cyctpy15 --pred_path ./save_dir/LI_2019-02-05_emb5_pos3/pred 

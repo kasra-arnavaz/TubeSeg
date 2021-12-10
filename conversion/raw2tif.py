@@ -5,10 +5,10 @@ import os
 import warnings
 from argparse import ArgumentParser
 
-def czi2tif(czi_file: str, save_to: str, make_duct: bool, make_beta: bool, tp_max: int = None) -> None:
+def czi2tif(czi_file: str, write_path: str, make_duct: bool, make_beta: bool, tp_max: int = None) -> None:
     ''' Writes 4D tif files for every frame.
         czi_file: path_like referring to czi_file e.g. './raw_data/LI_2018-05-10_emb4_pos3.czi'.
-        save_to: path to write the tif files to e.g. duct(or beta) files are saved to 'save_to/LI_2018-05-10_emb4_pos3/duct'.
+        write_path: path to write the tif files to e.g. duct(or beta) files are saved to 'write_path/LI_2018-05-10_emb4_pos3/duct'.
         make_duct: should duct channel be written.
         make_beta: should beta channel be written.
         tp_max: if specified, timepoints after tp_max are not written.
@@ -16,8 +16,8 @@ def czi2tif(czi_file: str, save_to: str, make_duct: bool, make_beta: bool, tp_ma
 
     if make_duct or make_beta:  
         movie_name = czi_file.split('/')[-1].replace('.czi', '')
-        duct_path = f'{save_to}/{movie_name}/duct'
-        beta_path = f'{save_to}/{movie_name}/beta'
+        duct_path = f'{write_path}/{movie_name}/duct'
+        beta_path = f'{write_path}/{movie_name}/beta'
         x = czi.imread(czi_file).squeeze()
         if tp_max > x.shape[1]: raise ValueError(f'tp_max exceeds the number of frames in the raw data.')
         if tp_max is not None: tp_max = x.shape[1]
@@ -33,10 +33,10 @@ def czi2tif(czi_file: str, save_to: str, make_duct: bool, make_beta: bool, tp_ma
     else: warnings.warn('Did nothing; make_duct and make_beta were both set to False!')
 
 
-def lsm2tif(lsm_file: str, save_to: str, make_duct: bool, make_beta: bool, tp_max: int = None) -> None:
+def lsm2tif(lsm_file: str, write_path: str, make_duct: bool, make_beta: bool, tp_max: int = None) -> None:
     ''' Writes 4D tif files for every frame.
     lsm_file: path_like referring to lsm_file e.g. './raw_data/LI_2018-05-10_emb4_pos3.lsm'.
-    save_to: path to write the tif files to e.g. duct(or beta) files are saved to 'save_to/LI_2018-05-10_emb4_pos3/duct'.
+    write_path: path to write the tif files to e.g. duct(or beta) files are saved to 'write_path/LI_2018-05-10_emb4_pos3/duct'.
     make_duct: should duct channel be written.
     make_beta: should beta channel be written.
     tp_max: if specified, timepoints after tp_max are not written.
@@ -44,8 +44,8 @@ def lsm2tif(lsm_file: str, save_to: str, make_duct: bool, make_beta: bool, tp_ma
 
     if make_duct or make_beta: 
         movie_name = lsm_file.split('/')[-1].replace('.lsm', '')
-        duct_path = f'{save_to}/{movie_name}/duct'
-        beta_path = f'{save_to}/{movie_name}/beta'
+        duct_path = f'{write_path}/{movie_name}/duct'
+        beta_path = f'{write_path}/{movie_name}/beta'
         with tif.TiffFile(lsm_file) as f:
             series = f.series[0]
             t, z, c = series.shape[:3]
@@ -71,14 +71,14 @@ def lsm2tif(lsm_file: str, save_to: str, make_duct: bool, make_beta: bool, tp_ma
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--raw_file', type=str)
-    parser.add_argument('--save_to', type=str)
+    parser.add_argument('--write_path', type=str)
     parser.add_argument('--make_duct', action='store_true')
     parser.add_argument('--make_beta', action='store_true')
     parser.add_argument('--tp_max', type=int)
     args = parser.parse_args()
     if args.raw_file.endswith('.czi'):
-        czi2tif(args.raw_file, args.save_to, args.make_duct, args.make_beta, args.tp_max)
+        czi2tif(args.raw_file, args.write_path, args.make_duct, args.make_beta, args.tp_max)
     elif args.raw_file.endswith('.lsm'):
-        lsm2tif(args.raw_file, args.save_to, args.make_duct, args.make_beta, args.tp_max)
+        lsm2tif(args.raw_file, args.write_path, args.make_duct, args.make_beta, args.tp_max)
     else: raise ValueError(f'{args.raw_file} should be of lsm or czi file format.')
 

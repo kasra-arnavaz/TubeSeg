@@ -85,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('--search_range', type=int, default=15)
     parser.add_argument('--memory', type=int, default=1)
     parser.add_argument('--thr', type=int, default=15)
-    parser.add_argument('--step', type=int, default=0.9)
+    parser.add_argument('--step', type=float, default=0.9)
     parser.add_argument('--stop', type=int, default=5)
     args = parser.parse_args()
     data = Prediction(args.cyc_path, args.cyc_name)

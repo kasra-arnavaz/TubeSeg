@@ -1,0 +1,1 @@
+python3 -m topology.filtering.tpy_filtering --cyc_path ./save_dir/LI_2019-02-05_emb5_pos3/cyc --cyc_name pred-0.7-semi-40_LI_2019-02-05_emb5_pos3 --search_range 15 --memory 1 --thr 15 --step 0.9 --stop 5

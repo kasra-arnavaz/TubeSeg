@@ -19,8 +19,12 @@ nx.py
 *.obj
 *.cmp
 *.cyc
-*.cyctpy
+*.cyctpy*
 *.cmpseq*
+*.tif
+*.czi
+*.lsm
+*.ims
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

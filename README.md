@@ -57,3 +57,4 @@ are saved in the same directroy specified by`--cyc_path`or`--cmp_path`. To make 
 ./scripts/cyc2tif.sh
 ./scripts./cmp2tif.sh
 ```
+The red channel has been used to indicate the cycles or components which have been filtered out. The coloring in tif file for cycles is according to their tracking, while for components they are assigned at random.

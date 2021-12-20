@@ -1,6 +1,12 @@
 # Tubular Segmentation
 This repository contains the code to extract topological features, i.e. cycles and compoenents, from tubular networks. Doing so requires following these steps.
 
+## 0. Requirements
+All python dependencies are listed in`requirements.txt`. To create a virtual environment and install the required packages run
+```
+./scripts/dependencies.sh
+```
+
 ## 1. Data
 The raw data format are in either`.lsm`or`.czi`formats. We need to save the tubular channel for each timepoint and save them as a `.tif`. To do so run
 ```

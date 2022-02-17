@@ -128,10 +128,5 @@ def get_patch_index(patch_id):
                         'A1','B1','C1','D1'])
     return int(np.argwhere(grid==patch_id))
 
-def prob2pred(prob_img, prob_name, thr):
-    pred_img = ((prob_img >= thr)*255).astype('uint8')
-    pred_name = prob_name.replace('prob', f'pred-{thr}')
-    return pred_img, pred_name
-
 if __name__ == '__main__':
     make_patches('results/semi/2d/images/pred/ts/0.7/patches', 'D:/dataset/test/patches/label', f'results/semi/2d/images/pred/ts/0.7', 'semi', 40, [0.7])

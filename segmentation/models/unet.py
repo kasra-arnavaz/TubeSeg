@@ -11,7 +11,7 @@ from argparse import ArgumentParser
 from segmentation.utils.patch_func import make_valid_patch, convert_patches_into_image
 from segmentation.utils.transform_data import TransformData, ModifiedStandardization
 from segmentation.cldice_loss.cldice import soft_dice_cldice_loss
-from utils.data_utils import prob2pred
+from utils.data_conversion import Prob2Pred
 
 class UNet:
     '''U-net segmentation model
@@ -83,8 +83,8 @@ class UNet:
         out_prob = Cropping2D((self.margin,self.margin), name='seg')(conv17)
         out_pred = tf.math.round(out_prob)
         
-        if self.cldice_loss: model = Model(input1, out_pred)
-        else: model = Model(input1, out_prob)
+        # if self.cldice_loss: model = Model(input1, out_pred)
+        model = Model(input1, out_prob)
         #print(model.summary())
         return model 
 
@@ -184,8 +184,7 @@ class UNet:
                 prob_patched = my_model.predict_generator(self.load_test_patches(duct_transformed), steps=self.patches_per_img*duct.shape[0]).squeeze()
                 prob = convert_patches_into_image(prob_patched)
                 prob_name = f'prob-{self.model_name}-{epoch}_{LI_name}'
-                pred, pred_name = prob2pred(prob, prob_name)
-                tif.imwrite(f'{write_path}/pred/{pred_name}', pred)
+                Prob2Pred(prob_name, prob, pred_thr).write(f'{write_path}/pred')
                 if save_prob:
                     tif.imwrite(f'{write_path}/prob/{prob_name}', prob)
 
@@ -196,6 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--tr_duct_path', type=str)
     parser.add_argument('--tr_label_path', type=str)
     parser.add_argument('--ts_duct_path', type=str)
+    parser.add_argument('--pred_thr', type=float)
     parser.add_argument('--resume_epoch', type=int, default=0)
     parser.add_argument('--final_epoch', type=int, default=200)
     parser.add_argument('--train', action='store_true', default=False)
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     unet = UNet(args.model_name, args.resume_epoch, args.final_epoch, cldice_loss=args.cldice_loss, lr=args.lr)
     if args.train: unet.train_model(args.tr_duct_path, args.tr_label_path)
-    unet.test_model(args.ts_duct_path)
+    unet.test_model(args.ts_duct_path, args.pred_thr)
 
 
 

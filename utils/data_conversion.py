@@ -5,10 +5,9 @@ from abc import ABC, abstractmethod, abstractproperty
 
 class Conversion(ABC):
 
-    def __init__(self, input_name: str, input_img: np.ndarray, write_path:str, *args):
+    def __init__(self, input_name: str, input_img: np.ndarray, *args):
         self.input_name = input_name
-        self.input_img = input_img
-        self.write_path = write_path
+        self.input_img = input_img 
         self.args = args
     
     @abstractmethod
@@ -19,9 +18,9 @@ class Conversion(ABC):
     def output_name(self):
         pass
 
-    def write(self):
-        os.makedirs(self.write_path, exist_ok=True)
-        tif.imwrite(f'{self.write_path}/{self.output_name}', self.convert())
+    def write(self, write_path):
+        os.makedirs(write_path, exist_ok=True)
+        tif.imwrite(f'{write_path}/{self.output_name}', self.convert())
 
 
 

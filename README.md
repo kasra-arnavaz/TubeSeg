@@ -33,6 +33,8 @@ These assume the models are already trained and the weights are saved in`.log/{m
 The probability maps are saved to`ts_duct_path/../prob`.
 
 To train these models,`--train`should be added in the arguments along with`--tr_duct_path`and`--tr_label_path` with proper input.
+
+To use clDice loss in U-net architecture, add `--cldice_loss` to `./scripts/unet.sh`
 ## 3. Skeletonization
 We use the PyGEL3D module to extract skeletons from the binary segmentations as follows:
 ```

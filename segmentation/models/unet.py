@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 from segmentation.utils.patch_func import make_valid_patch, convert_patches_into_image
 from segmentation.utils.transform_data import TransformData, ModifiedStandardization
 from segmentation.cldice_loss.cldice import soft_dice_cldice_loss
+from utils.data_utils import prob2pred
 
 class UNet:
     '''U-net segmentation model
@@ -37,7 +38,7 @@ class UNet:
         '''
         if resume_epoch > final_epoch:
             raise ValueError('resume_epoch should not be larger than final_epoch.')
-        self.model_name = model_name
+        self.model_name = f'cldice{model_name}' if cldice_loss else model_name
         self.resume_epoch = resume_epoch
         self.final_epoch = final_epoch
         self.batch_size = batch_size
@@ -162,7 +163,8 @@ class UNet:
                     yield duct_pad[np.newaxis, z, i*self.output_size:i*self.output_size+self.input_size,\
                                                 j*self.output_size:j*self.output_size+self.input_size,:]
    
-    def test_model(self, duct_path: str, write_path: str = None, epoch_list: List[int] = None) -> None:
+    def test_model(self, duct_path: str, pred_thr: float, write_path: str = None,
+                    epoch_list: List[int] = None, save_prob: bool = False) -> None:
         ''' Writes probability maps corresponding to the voxel being part of a tube.
         duct_path: the path to where the ductual images to get predictions from is located.
         write_path: the probabilities are written to ./{write_path}/prob. By default write_path={duct_path}/..
@@ -181,7 +183,11 @@ class UNet:
                 duct_transformed = self.transformer(duct).transform()
                 prob_patched = my_model.predict_generator(self.load_test_patches(duct_transformed), steps=self.patches_per_img*duct.shape[0]).squeeze()
                 prob = convert_patches_into_image(prob_patched)
-                tif.imwrite(f'{write_path}/prob/prob-{self.model_name}-{epoch}_{LI_name}', prob)
+                prob_name = f'prob-{self.model_name}-{epoch}_{LI_name}'
+                pred, pred_name = prob2pred(prob, prob_name)
+                tif.imwrite(f'{write_path}/pred/{pred_name}', pred)
+                if save_prob:
+                    tif.imwrite(f'{write_path}/prob/{prob_name}', prob)
 
 
 if __name__ == '__main__':

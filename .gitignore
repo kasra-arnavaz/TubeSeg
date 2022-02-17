@@ -21,6 +21,7 @@ nx.py
 *.cyctpy*
 *.cmpseq*
 *.tif
+*.gif
 *.czi
 *.lsm
 *.ims

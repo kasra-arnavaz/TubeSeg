@@ -1,5 +1,6 @@
 # Tubular Segmentation
 This repository contains the code to extract topological features, i.e. cycles and compoenents, from tubular networks. Doing so requires following these steps.
+![alt text](https://github.com/kasra-arnavaz/tubeseg/teaser.gif?raw=true)
 
 ## 0. Requirements
 All python dependencies are listed in `requirements.txt`. To create a virtual environment and install the required packages run

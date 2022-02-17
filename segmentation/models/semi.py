@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 from segmentation.utils.patch_func import make_valid_patch, convert_patches_into_image
 from segmentation.utils.transform_data import TransformData, ModifiedStandardization
 from segmentation.cldice_loss.cldice import soft_dice_cldice_loss
+from utils.data_conversion import Prob2Pred
 
 class SemiSupervised:
     ''' A Semisupervised U-net which trains an AE and a U-net jointly with a shared encoder.
@@ -39,7 +40,7 @@ class SemiSupervised:
         '''
         if resume_epoch > final_epoch:
             raise ValueError('resume_epoch should not be larger than final_epoch.')
-        self.model_name = model_name
+        self.model_name = f'cldice{model_name}' if cldice_loss else model_name
         self.resume_epoch = resume_epoch
         self.final_epoch = final_epoch
         self.loss_weights = loss_weights
@@ -101,9 +102,9 @@ class SemiSupervised:
         conv24 = Conv2D(8, 3, activation='relu', padding='same')(merge3)
         conv25 = Conv2D(8, 3, activation='relu', padding='same')(conv24)
         conv26 = Conv2D(1, 1, activation='sigmoid', padding='same')(conv25)
-        out_seg = Cropping2D((self.margin,self.margin), name='seg')(conv26)
+        out_prob = Cropping2D((self.margin,self.margin), name='seg')(conv26)
 
-        model = Model(input1, [out_rec, out_seg])
+        model = Model(input1, [out_rec, out_prob])
         # print(seg_model.summary())
         return model
 
@@ -205,7 +206,8 @@ class SemiSupervised:
                                                 j*self.output_size:j*self.output_size+self.input_size,:]
 
 
-    def test_model(self, duct_path: str, write_path: str = None, epoch_list: List[int] = None, make_rec: bool = False) -> None:
+    def test_model(self, duct_path: str, pred_thr: float, write_path: str = None,
+                    epoch_list: List[int] = None, make_rec: bool = False, make_prob: bool = False) -> None:
         ''' Writes probability maps corresponding to the voxel being part of a tube.
         duct_path: the path to where the ductual images to get predictions from is located.
         write_path: the probabilities are written to ./{write_path}/prob. By default write_path={duct_path}/..
@@ -226,6 +228,10 @@ class SemiSupervised:
                 x_transformed = tran.transform()
                 rec_patched, prob_patched = my_model.predict_generator(self.load_test_patches(x_transformed), steps=self.patches_per_img*duct.shape[0])
                 prob = convert_patches_into_image(prob_patched.squeeze())
+                prob_name = f'prob-{self.model_name}-{epoch}_{LI_name}'
+                Prob2Pred(prob_name, prob, pred_thr).write(f'{write_path}/pred')
+                if make_prob:
+                    tif.imwrite(f'{write_path}/prob/{prob_name}', prob)
                 tif.imwrite(f'{write_path}/prob/prob-{self.model_name}-{epoch}_{LI_name}', prob)
                 if make_rec:
                     rec = convert_patches_into_image(rec_patched.squeeze())
@@ -236,20 +242,23 @@ class SemiSupervised:
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument('--tr_duct_path', type=str, default=None)
+    parser.add_argument('--dev_duct_path', type=str, default=None)
+    parser.add_argument('--tr_label_path', type=str, default=None)
+    parser.add_argument('--ts_duct_path', type=str, default=None)
+    parser.add_argument('--pred_thr', type=float, default=0.5)
     parser.add_argument('--model_name', type=str, default='semi')
-    parser.add_argument('--tr_duct_path', type=str)
-    parser.add_argument('--dev_duct_path', type=str)
-    parser.add_argument('--tr_label_path', type=str)
-    parser.add_argument('--ts_duct_path', type=str)
     parser.add_argument('--resume_epoch', type=int, default=0)
     parser.add_argument('--final_epoch', type=int, default=40)
     parser.add_argument('--loss_weights', nargs=2, type=int, default=[1, 10])
     parser.add_argument('--train', action='store_true', default=False)
     parser.add_argument('--cldice_loss', action='store_true', default=False)
     parser.add_argument('--make_rec', action='store_true', default=False)
+    parser.add_argument('--make_prob', action='store_true', default=False)
     parser.add_argument('--lr', type=float, default=1e-4)
     args = parser.parse_args()
     semi = SemiSupervised(args.model_name, args.resume_epoch, args.final_epoch, args.loss_weights, cldice_loss=args.cldice_loss, lr=args.lr)
     if args.train: semi.train_model(args.tr_duct_path, args.tr_label_path, args.dev_duct_path)
-    semi.test_model(args.ts_duct_path, make_rec=args.make_rec)
+    if args.ts_duct_path is not None:
+        semi.test_model(args.ts_duct_path, args.pre_thr, make_rec=args.make_rec, make_prob=args.make_prob)
 

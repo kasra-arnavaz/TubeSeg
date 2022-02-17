@@ -81,9 +81,7 @@ class UNet:
         conv16 = Conv2D(8, 3, activation='relu', padding='same')(conv15)
         conv17 = Conv2D(1, 1, activation='sigmoid', padding='same')(conv16)
         out_prob = Cropping2D((self.margin,self.margin), name='seg')(conv17)
-        out_pred = tf.math.round(out_prob)
-        
-        # if self.cldice_loss: model = Model(input1, out_pred)
+
         model = Model(input1, out_prob)
         #print(model.summary())
         return model 
@@ -164,7 +162,7 @@ class UNet:
                                                 j*self.output_size:j*self.output_size+self.input_size,:]
    
     def test_model(self, duct_path: str, pred_thr: float, write_path: str = None,
-                    epoch_list: List[int] = None, save_prob: bool = False) -> None:
+                    epoch_list: List[int] = None, make_prob: bool = False) -> None:
         ''' Writes probability maps corresponding to the voxel being part of a tube.
         duct_path: the path to where the ductual images to get predictions from is located.
         write_path: the probabilities are written to ./{write_path}/prob. By default write_path={duct_path}/..
@@ -185,26 +183,28 @@ class UNet:
                 prob = convert_patches_into_image(prob_patched)
                 prob_name = f'prob-{self.model_name}-{epoch}_{LI_name}'
                 Prob2Pred(prob_name, prob, pred_thr).write(f'{write_path}/pred')
-                if save_prob:
+                if make_prob:
                     tif.imwrite(f'{write_path}/prob/{prob_name}', prob)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument('--tr_duct_path', type=str, default=None)
+    parser.add_argument('--tr_label_path', type=str, default=None)
+    parser.add_argument('--ts_duct_path', type=str, default=None)
+    parser.add_argument('--pred_thr', type=float, default=0.5)
     parser.add_argument('--model_name', type=str, default='unet')
-    parser.add_argument('--tr_duct_path', type=str)
-    parser.add_argument('--tr_label_path', type=str)
-    parser.add_argument('--ts_duct_path', type=str)
-    parser.add_argument('--pred_thr', type=float)
     parser.add_argument('--resume_epoch', type=int, default=0)
     parser.add_argument('--final_epoch', type=int, default=200)
+    parser.add_argument('--make_prob', action='store_true', default=False)
     parser.add_argument('--train', action='store_true', default=False)
     parser.add_argument('--cldice_loss', action='store_true', default=False)
     parser.add_argument('--lr', type=float, default=1e-4)
     args = parser.parse_args()
     unet = UNet(args.model_name, args.resume_epoch, args.final_epoch, cldice_loss=args.cldice_loss, lr=args.lr)
     if args.train: unet.train_model(args.tr_duct_path, args.tr_label_path)
-    unet.test_model(args.ts_duct_path, args.pred_thr)
+    if args.ts_duct_path is not None:
+        unet.test_model(args.ts_duct_path, args.pred_thr, make_prob=args.make_prob)
 
 
 

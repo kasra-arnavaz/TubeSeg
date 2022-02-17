@@ -1,0 +1,1 @@
+python3 -m segmentation.models.ae --ts_duct_path ./save_dir/LI_2019-02-05_emb5_pos3/duct --final_epoch 200 --final_epoch_rec 20

@@ -10,6 +10,7 @@ from tensorflow.python.keras.optimizers import Adam, SGD
 from segmentation.utils.patch_func import make_valid_patch, convert_patches_into_image
 from segmentation.utils.transform_data import TransformData, ModifiedStandardization
 from segmentation.cldice_loss.cldice import soft_dice_cldice_loss
+from utils.data_conversion import Prob2Pred
 
 class AE:
     '''A U-net whose encoder has been pretrained on an AE (U-net+AE)
@@ -40,7 +41,7 @@ class AE:
             raise ValueError('resume_epoch should not be larger than final_epoch.')
         if resume_epoch_rec > final_epoch_rec:
             raise ValueError('resume_epoch_rec should not be larger than final_epoch_rec.')
-        self.model_name = model_name
+        self.model_name = f'cldice{model_name}' if cldice_loss else model_name
         self.resume_epoch = resume_epoch
         self.final_epoch = final_epoch
         self.batch_size = batch_size
@@ -105,11 +106,9 @@ class AE:
         conv25 = Conv2D(8, 3, activation='relu', padding='same')(conv24)
         conv26 = Conv2D(1, 1, activation='sigmoid', padding='same')(conv25)
         out_prob = Cropping2D((self.margin,self.margin), name='seg')(conv26)
-        out_pred = tf.math.round(out_prob)
     
         rec_model = Model(input1, out_rec)
-        if self.cldice_loss: seg_model = Model(input1, out_pred)
-        else: seg_model = Model(input1, out_prob)
+        seg_model = Model(input1, out_prob)
         #print(rec_model.summary())
         #print(seg_model.summary())
         return rec_model, seg_model
@@ -289,7 +288,8 @@ class AE:
             np.save(f'log/{self.model_name}/loss/segloss_{self.model_name}_{epoch}.npy', hist.history['loss'])
 
 
-    def test_model(self, duct_path: str, write_path: str = None, epoch_list: List[int] = None) -> None:
+    def test_model(self, duct_path: str, pred_thr: float, write_path: str = None,
+                     epoch_list: List[int] = None, make_prob: bool = False) -> None:
         ''' Writes probability maps corresponding to the voxel being part of a tube.
         duct_path: the path to where the ductual images to get predictions from is located.
         write_path: the probabilities are written to ./{write_path}/prob. By default write_path={duct_path}/..
@@ -309,16 +309,21 @@ class AE:
                 prob_patched = seg_model.predict_generator(self.load_test_patches(duct_transformed),\
                     steps=self.patches_per_img*duct.shape[0]).squeeze()
                 prob = convert_patches_into_image(prob_patched)
-                tif.imwrite(f'{write_path}/prob/prob-{self.model_name}-{epoch}_{LI_name}', prob)
+                prob_name = f'prob-{self.model_name}-{epoch}_{LI_name}'
+                Prob2Pred(prob_name, prob, pred_thr).write(f'{write_path}/pred')
+                if make_prob:
+                    tif.imwrite(f'{write_path}/prob/{prob_name}', prob)
+
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument('--tr_duct_path', type=str, default=None)
+    parser.add_argument('--dev_duct_path', type=str, default=None)
+    parser.add_argument('--tr_label_path', type=str, default=None)
+    parser.add_argument('--ts_duct_path', type=str, default=None)
+    parser.add_argument('--pred_thr', type=float, default=0.5)
     parser.add_argument('--model_name', type=str, default='ae')
-    parser.add_argument('--tr_duct_path', type=str)
-    parser.add_argument('--dev_duct_path', type=str)
-    parser.add_argument('--tr_label_path', type=str)
-    parser.add_argument('--ts_duct_path', type=str)
     parser.add_argument('--resume_epoch', type=int, default=0)
     parser.add_argument('--final_epoch', type=int, default=200)
     parser.add_argument('--resume_epoch_rec', type=int, default=0)
@@ -326,12 +331,15 @@ if __name__ == '__main__':
     parser.add_argument('--train', action='store_true', default=False)
     parser.add_argument('--train_rec', action='store_true', default=False)
     parser.add_argument('--make_rec', action='store_true', default=False)
+    parser.add_argument('--make_prob', action='store_true', default=False)
     parser.add_argument('--cldice_loss', action='store_true', default=False)
     parser.add_argument('--lr', type=float, default=1e-4)
+
     args = parser.parse_args()
     ae = AE(args.model_name, args.resume_epoch, args.final_epoch, args.resume_epoch_rec, args.final_epoch_rec,\
          cldice_loss=args.cldice_loss, lr=args.lr)
     if args.train_rec: ae.train_rec_model(args.tr_duct_path, args.dev_duct_path)
     if args.train: ae.train_model(args.tr_duct_path, args.tr_label_path)
     if args.make_rec: ae.test_rec_model(args.ts_duct_path)
-    ae.test_model(args.ts_duct_path)
+    if args.ts_duct_path is not None:
+        ae.test_model(args.ts_duct_path, args.pred_thr, make_prob=args.make_prob)

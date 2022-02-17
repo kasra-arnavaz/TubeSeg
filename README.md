@@ -2,26 +2,26 @@
 This repository contains the code to extract topological features, i.e. cycles and compoenents, from tubular networks. Doing so requires following these steps.
 
 ## 0. Requirements
-All python dependencies are listed in`requirements.txt`. To create a virtual environment and install the required packages run
+All python dependencies are listed in `requirements.txt`. To create a virtual environment and install the required packages run
 ```
 ./scripts/dependencies.sh
 ```
 
 ## 1. Data
-The raw data format are in either`.lsm`or`.czi`formats. We need to save the tubular channel for each timepoint and save them as a `.tif`. To do so run
+The raw data format are in either `.lsm`or `.czi` formats. We need to save the tubular channel for each timepoint and save them as a `.tif`. To do so run
 ```
 ./scripts/convert_data.sh
 ```
-You can replace the`--raw_file` argument to point to the desired raw data. You can add `--make_beta` to save beta channel as well. The argument `--tp_max` can also be specified
+You can replace the `--raw_file` argument to point to the desired raw data. You can add `--make_beta` to save beta channel as well. The argument `--tp_max` can also be specified
 to ignore later timepoints.
 ## 2. Segmentation
 Three segmentation models are already defined under`segmentation/models`:
 
-`unet`is a fully-supervised network,
+`unet` is a fully-supervised network,
 
-`ae`is a U-net whose encoder has been pretrained on an autoencoder,
+`ae` is a U-net whose encoder has been pretrained on an autoencoder,
 
-`semi`is a semisuprvised U-net which trains a U-net and an autoencoder with a shared encoder jointly.
+`semi` is a semisuprvised U-net which trains a U-net and an autoencoder with a shared encoder jointly.
 
 To run these models, you can execute
 ```
@@ -29,12 +29,12 @@ To run these models, you can execute
 ./scripts/ae.sh
 ./scripts/semi.sh
 ```
-These assume the models are already trained and the weights are saved in`.log/{model_name}/weights`. Adjust`--final_epoch`to select which epoch to use to make predictions.
-The probability maps are saved to`ts_duct_path/../prob`.
+These assume the models are already trained and the weights are saved in `.log/{model_name}/weights`. Adjust `--final_epoch` to select which epoch to use to make predictions.
+The probability maps are saved to `ts_duct_path/../prob`.
 
-To train these models,`--train`should be added in the arguments along with`--tr_duct_path`and`--tr_label_path` with proper input.
+To train these models, `--train` should be added in the arguments along with `--tr_duct_path` and `--tr_label_path` with proper input.
 
-To use clDice loss in U-net architecture, add `--cldice_loss` to `./scripts/unet.sh`
+To use clDice loss in the above architectures, add `--cldice_loss` to the desired script.
 ## 3. Skeletonization
 We use the PyGEL3D module to extract skeletons from the binary segmentations as follows:
 ```
@@ -48,8 +48,7 @@ From the skeletons, we can detect cycles and components in each 3d image. To do 
 ## 5. Filtering
 To use the temporal information, we filter out cycles and components which are likely to be false positivies.
 
-To filter out cycles, they are tracked over time and then those trajectories which are short-lived are removed.  How many timepoints is considered short is determined by `--thr`
-in
+To filter out cycles, they are tracked over time and then those trajectories which are short-lived are removed.  How many timepoints is considered short is determined by `--thr` in
 ```
 ./scripts/cyc_filtering.sh
 ```
@@ -60,7 +59,7 @@ removed from that frame. What determines the vicinity is the `--thr` in the foll
 ```
 ## 6. Topology as Tif
 To easily visualize the results, the cycles and components can be saved as a 5D tif file, assuming both the original files and their filtered versions
-are saved in the same directroy specified by`--cyc_path`or`--cmp_path`. To make maximum intensity projection along the z axis, use`--make_mip` in
+are saved in the same directroy specified by `--cyc_path` or `--cmp_path`. To make maximum intensity projection along the z axis, use `--make_mip` in
 ```
 ./scripts/cyc2tif.sh
 ./scripts./cmp2tif.sh

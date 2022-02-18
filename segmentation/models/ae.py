@@ -3,9 +3,9 @@ import os
 import tifffile as tif
 from typing import Tuple, List
 from argparse import ArgumentParser
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers import Conv2D, Input, MaxPooling2D, concatenate, Conv2DTranspose, Cropping2D
-from tensorflow.python.keras.optimizers import Adam, SGD
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Conv2D, Input, MaxPooling2D, concatenate, Conv2DTranspose, Cropping2D
+from tensorflow.keras.optimizers import Adam, SGD
 
 from segmentation.utils.patch_func import make_valid_patch, convert_patches_into_image
 from segmentation.utils.transform_data import TransformData, ModifiedStandardization
@@ -23,7 +23,7 @@ class AE:
     patches_per_img = grid_size**2
 
     def __init__(self, model_name: str, resume_epoch: int, final_epoch: int, resume_epoch_rec: int, final_epoch_rec: int,\
-         transformer: TransformData = ModifiedStandardization, batch_size: int = 8, cldice_loss: bool = False, lr: float = 1e-4) -> None:
+         transformer: TransformData = ModifiedStandardization, batch_size: int = 8, cldice_loss: bool = False, lr: float = 1e-5) -> None:
         '''
         model_name: used in the name of the saved weights of the model and its output.
         resume_epoch: the epoch from which the model should continue training, 
@@ -333,7 +333,7 @@ if __name__ == '__main__':
     parser.add_argument('--make_rec', action='store_true', default=False)
     parser.add_argument('--make_prob', action='store_true', default=False)
     parser.add_argument('--cldice_loss', action='store_true', default=False)
-    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--lr', type=float, default=1e-5)
 
     args = parser.parse_args()
     ae = AE(args.model_name, args.resume_epoch, args.final_epoch, args.resume_epoch_rec, args.final_epoch_rec,\

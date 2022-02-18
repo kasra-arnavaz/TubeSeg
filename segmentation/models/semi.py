@@ -2,9 +2,9 @@ import tensorflow as tf
 import tifffile as tif
 import numpy as np
 import os
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers import Conv2D, Input, MaxPooling2D, concatenate, Conv2DTranspose, Cropping2D
-from tensorflow.python.keras.optimizers import Adam, SGD
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Conv2D, Input, MaxPooling2D, concatenate, Conv2DTranspose, Cropping2D
+from tensorflow.keras.optimizers import Adam, SGD
 from typing import Tuple, List
 from argparse import ArgumentParser
 
@@ -26,7 +26,7 @@ class SemiSupervised:
 
 
     def __init__(self, model_name: str, resume_epoch: int, final_epoch: int, loss_weights: List[int] = [1, 10], \
-        transformer: TransformData = ModifiedStandardization, batch_size: int = 8, cldice_loss: bool = False, lr: float = 1e-4) -> None:
+        transformer: TransformData = ModifiedStandardization, batch_size: int = 8, cldice_loss: bool = False, lr: float = 1e-5) -> None:
         '''
         model_name: used in the name of the saved weights of the model and its output.
         resume_epoch: the epoch from which the model should continue training, 
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     parser.add_argument('--cldice_loss', action='store_true', default=False)
     parser.add_argument('--make_rec', action='store_true', default=False)
     parser.add_argument('--make_prob', action='store_true', default=False)
-    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--lr', type=float, default=1e-5)
     args = parser.parse_args()
     semi = SemiSupervised(args.model_name, args.resume_epoch, args.final_epoch, args.loss_weights, cldice_loss=args.cldice_loss, lr=args.lr)
     if args.train: semi.train_model(args.tr_duct_path, args.tr_label_path, args.dev_duct_path)

@@ -216,7 +216,6 @@ class SemiSupervised:
         '''
         if epoch_list is None: epoch_list = [self.final_epoch]
         if write_path is None: write_path = f'{duct_path}/..'
-        os.makedirs(f'{write_path}/prob', exist_ok=True)
         LI_names = [file.replace('duct_', '') for file in os.listdir(duct_path) if file.startswith('duct')]
         for epoch in epoch_list:
             print(f'Testing on epoch {epoch} ...')
@@ -231,6 +230,7 @@ class SemiSupervised:
                 prob_name = f'prob-{self.model_name}-{epoch}_{LI_name}'
                 Prob2Pred(prob_name, prob, pred_thr).write(f'{write_path}/pred')
                 if make_prob:
+                    os.makedirs(f'{write_path}/prob', exist_ok=True)
                     tif.imwrite(f'{write_path}/prob/{prob_name}', prob)
                 tif.imwrite(f'{write_path}/prob/prob-{self.model_name}-{epoch}_{LI_name}', prob)
                 if make_rec:

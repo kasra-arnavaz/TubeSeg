@@ -32,7 +32,7 @@ class Skeleton:
             self.write_graph()
             self.skeletonize()
             self.scale_skeleton()
-            if self.make_skel: self.write_obj()
+            if self.make_obj: self.write_obj()
             self.remove_graph()
 
     def skeleton_deos_not_exist(self):

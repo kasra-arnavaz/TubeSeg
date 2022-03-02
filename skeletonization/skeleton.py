@@ -32,17 +32,11 @@ class Skeleton:
         '''
         if self.skeleton_deos_not_exist() or self.make_new or self.skeleton_aborted():
             print(f'Making new skeleton for {self.name}')
-            self.make_dir()
             self.write_graph()
             self.skeletonize()
             self.scale_skeleton()
             if self.make_obj: self.write_obj()
             self.remove_graph()
-    
-    def make_dir(self):
-        ''' Creates the directory to save the results
-        '''
-        os.makedirs(self.write_path, exist_ok=True)
 
     def skeleton_deos_not_exist(self):
         return f'{self.name}.skel' not in os.listdir(self.write_path)
@@ -70,6 +64,7 @@ class Skeleton:
     def write_graph(self):
         ''' Converts the segmentation into a graph.
         '''
+        os.makedirs(f'{self.write_path}/skel', exist_ok=True)
         positions, edges = self.get_positions_and_edges()
         with open(f'{self.write_path}/skel/{self.name}.graph','w') as f:
                 for p in positions:
@@ -98,6 +93,7 @@ class Skeleton:
                 else: print(line, file=f)
     
     def write_obj(self):
+        os.makedir(f'{self.write_path}/obj')
         s = graph.load(f'{self.write_path}/skel/{self.name}.skel')
         m = graph.to_mesh_cyl(s, fudge=0.5)
         hmesh.obj_save(f'{self.write_path}/obj/{self.name}.obj', m)

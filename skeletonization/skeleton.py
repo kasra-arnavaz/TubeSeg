@@ -101,7 +101,7 @@ class Skeleton:
     def remove_graph(self):
         ''' Removes the graph that is converted from the segmentation to save space.
         '''
-        os.remove(f'{self.seg_path}/{self.name}.graph')
+        os.remove(f'{self.write_path}/skel/{self.name}.graph')
 
 if __name__ == '__main__':
     parser = ArgumentParser()

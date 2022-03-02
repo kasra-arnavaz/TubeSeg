@@ -16,7 +16,7 @@ class Skeleton:
         make_obj: if True, will make .obj file which can visualize the skeleton in MeshLab app. Saved in ./{write_path}/obj
         write_path: the main path to save results in. Default './{seg_path}/..'. Skeletons are saved in ./{write_path}/skel
         '''
-        if write_path is None: self.write_path = f'seg_path/..'
+        if write_path is None: self.write_path = f'{seg_path}/..'
         self.seg_path = seg_path
         self.name = name
         self.make_new = make_new

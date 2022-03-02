@@ -36,7 +36,7 @@ class Skeleton:
             self.remove_graph()
 
     def skeleton_deos_not_exist(self):
-        return f'skel_{self.name}.graph' not in os.listdir(self.write_path)
+        return f'{self.name}.skel' not in os.listdir(self.write_path)
 
     def skeleton_aborted(self):
         return os.path.getsize(f'{self.write_path}/skel/{self.name}.skel') < 1000

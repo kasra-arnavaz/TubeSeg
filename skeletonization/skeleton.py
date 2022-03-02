@@ -84,9 +84,9 @@ class Skeleton:
     def scale_skeleton(self):
         ''' Sets the correct scales along the z axis.
         '''
-        with open(f'{self.seg_path}/skel/{self.name}.skel') as f:
+        with open(f'{self.write_path}/skel/{self.name}.skel') as f:
             lines = f.read().splitlines()
-        with open(f'{self.seg_path}/skel/{self.name}.skel', 'w') as f:
+        with open(f'{self.write_path}/skel/{self.name}.skel', 'w') as f:
             for line in lines:
                 if line.startswith('n') and 'nan' not in line:
                     print(line.split(' ')[0], float(line.split(' ')[1])*(2.89),float(line.split(' ')[2]), float(line.split(' ')[3]), file=f)

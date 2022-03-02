@@ -16,7 +16,10 @@ class Skeleton:
         make_obj: if True, will make .obj file which can visualize the skeleton in MeshLab app. Saved in ./{write_path}/obj
         write_path: the main path to save results in. Default './{seg_path}/..'. Skeletons are saved in ./{write_path}/skel
         '''
-        if write_path is None: self.write_path = f'{seg_path}/..'
+        if write_path is None:
+            self.write_path = f'{seg_path}/..'
+        else:
+            self.write_path = write_path
         self.seg_path = seg_path
         self.name = name
         self.make_new = make_new
@@ -29,11 +32,17 @@ class Skeleton:
         '''
         if self.skeleton_deos_not_exist() or self.make_new or self.skeleton_aborted():
             print(f'Making new skeleton for {self.name}')
+            self.make_dir()
             self.write_graph()
             self.skeletonize()
             self.scale_skeleton()
             if self.make_obj: self.write_obj()
             self.remove_graph()
+    
+    def make_dir(self):
+        ''' Creates the directory to save the results
+        '''
+        os.makedirs(self.write_path, exist_ok=True)
 
     def skeleton_deos_not_exist(self):
         return f'{self.name}.skel' not in os.listdir(self.write_path)
@@ -62,7 +71,6 @@ class Skeleton:
         ''' Converts the segmentation into a graph.
         '''
         positions, edges = self.get_positions_and_edges()
-        print('*'*10)
         with open(f'{self.write_path}/skel/{self.name}.graph','w') as f:
                 for p in positions:
                     print("n", p[0], p[1], p[2], file=f)

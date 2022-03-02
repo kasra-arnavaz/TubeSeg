@@ -62,6 +62,7 @@ class Skeleton:
         ''' Converts the segmentation into a graph.
         '''
         positions, edges = self.get_positions_and_edges()
+        print('*'*10)
         with open(f'{self.write_path}/skel/{self.name}.graph','w') as f:
                 for p in positions:
                     print("n", p[0], p[1], p[2], file=f)

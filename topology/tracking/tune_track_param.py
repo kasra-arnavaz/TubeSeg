@@ -4,7 +4,7 @@ from topology.tracking.hota import HOTA
 from topology.tracking.trackpy import Tracking
 from topology.tracking.tracking_data import Prediction
 from topology.unpickle import read_pickle
-from graph.nx_graph import NxGraph, Cycle, Component
+from topology.cyc_cmp import Cycle, Component
 
 import os
 from cached_property import cached_property
@@ -73,4 +73,4 @@ class TuneTrackingParameters:
         return best_params, best_measure
 
 if __name__ == '__main__':
-    print(TuneTrackingParameters('movie/silja_test', search_list=[15], mem_list=[1], thr_list=[15], step_list=[0.9], stop_list=[5]).grid_search())
+    print(TuneTrackingParameters('cldice_unet/dev_silja', search_list=[5,10,15], mem_list=[1], thr_list=[10,12,15], step_list=[0.9], stop_list=[3,5]).grid_search())
